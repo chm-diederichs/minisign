@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "sodium-native": "^2.3.0"
+  }
+}
