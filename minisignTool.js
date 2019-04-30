@@ -9,7 +9,8 @@ const file = 'test.txt'
 const signatureFile = `${file}.minisig`
 const pubKeyFile = 'minisign.pub'
 const secKeyFile = 'minisign.key'
-const comment = '<insert comment here>'
+var comment = '<insert comment here>'
+var trustedComment = '<insert trusted comment here>'
 
 const untrustedPrelude = Buffer.from('untrusted comment: ')
 const trustedPrelude = Buffer.from('trusted comment: ')
@@ -28,7 +29,7 @@ function parsePubkey (pubkeyBuf) {
   const keyInfo = Buffer.from(keyInfoBase64, 'base64')
 
   const signatureAlgorithm = keyInfo.subarray(0, 2)
-  const keyId = reverse(keyInfo.subarray(2, 10)).toString('hex')
+  const keyID = reverse(keyInfo.subarray(2, 10)).toString('hex')
   const publicKey = keyInfo.subarray(10)
 
   assert(signatureAlgorithm.equals(expectedSignatureAlgorithm))
@@ -36,7 +37,7 @@ function parsePubkey (pubkeyBuf) {
   return {
     untrustedComment,
     signatureAlgorithm,
-    keyId,
+    keyID,
     publicKey
   }
 }
@@ -53,7 +54,7 @@ function parseSignature (signatureBuf) {
   const sigInfo = Buffer.from(sigInfoBase64, 'base64')
 
   const signatureAlgorithm = sigInfo.subarray(0, 2)
-  const keyId = reverse(sigInfo.subarray(2, 10))
+  const keyID = reverse(sigInfo.subarray(2, 10))
   const signature = sigInfo.subarray(10, sigInfoEnd)
 
   const trustedCommentStart = sigInfoEnd + 1 + trustedPrelude.byteLength
@@ -66,7 +67,7 @@ function parseSignature (signatureBuf) {
   return {
     untrustedComment,
     signatureAlgorithm,
-    keyId,
+    keyID,
     signature,
     trustedComment,
     globalSignature
@@ -104,21 +105,41 @@ function parseSecretKey (secretKeyBuf) {
   }
 }
 
-function extractSecretKey (passwordBuf, kdfSalt, kdfOpsLimit, kdfMemLimit, keynumSK) {
+function extractSecretKey (passwordBuf, SKinfo) {
   var kdfOutput = Buffer.alloc(104)
   var keynumInfo = Buffer.alloc(104)
 
-  sodium.crypto_pwhash_scryptsalsa208sha256(kdfOutput, passwordBuf, kdfSalt, kdfOpsLimit, kdfMemLimit)
-  keynumInfo = xor(kdfOutput, keynumSK)
+  sodium.crypto_pwhash_scryptsalsa208sha256(kdfOutput, passwordBuf, SKinfo.kdfSalt, SKinfo.kdfOpsLimit, SKinfo.kdfMemLimit)
+  keynumInfo = xor(kdfOutput, SKinfo.keynumSK)
   const keyID = keynumInfo.subarray(0, 8)
   const secretKey = keynumInfo.subarray(8, 72)
   const checksum = keynumInfo.subarray(72)
+  const signatureAlgorithm = SKinfo.signatureAlgorithm
 
   return {
     keyID,
     secretKey,
-    checksum
+    checksum,
+    signatureAlgorithm
   }
+}
+
+// takes arbitrary content buffer and returns signature buffer in minisgn format
+function signContent (content, comment, SKdetails, trustComment) {
+  var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
+  var globalSignature = Buffer.alloc(sodium.crypto_sign_BYTES)
+
+  sodium.crypto_sign_detached(signature, content, SKdetails.secretKey)
+
+  var signatureInfo = Buffer.concat([SKdetails.signatureAlgorithm, SKdetails.keyID, signature]).toString('base64')
+  var untrustedComment = ('untrusted comment: ' + comment)
+  var trustedComment = ('trusted comment: ' + comment.toString('ascii'))
+
+  var forGlobalSig = Buffer.concat([signature, Buffer.from(trustComment)])
+  sodium.crypto_sign_detached(globalSignature, forGlobalSig, SKdetails.secretKey)
+
+  var minisignStr = (untrustedComment + '\n' + signatureInfo + '\n' + trustedComment + '\n' + globalSignature.toString('base64'))
+  return Buffer.from(minisignStr)
 }
 
 // load secret key file
@@ -129,7 +150,6 @@ fs.readFile(secKeyFile, function (err, SKbuf) {
 
   var signatureTest = Buffer.alloc(sodium.crypto_sign_BYTES)
   var globalSignatureTest = Buffer.alloc(sodium.crypto_sign_BYTES)
-  console.log(SKinfo.keyID)
 
   // load content to be signed
   fs.readFile(file, function (err, message) {
@@ -137,7 +157,8 @@ fs.readFile(secKeyFile, function (err, SKbuf) {
     sodium.crypto_sign_detached(signatureTest, message, SKinfo.secretKey)
     var forGlobalSig = Buffer.concat([signatureTest, Buffer.from(comment)])
     sodium.crypto_sign_detached(globalSignatureTest, forGlobalSig, SKinfo.secretKey)
-    var toFile = ('untrusted comment: \n' + Buffer.concat([expectedSignatureAlgorithm, SKinfo.keyID, signatureTest]).toString('base64') + '\n' + 'trusted comment: ' + comment.toString('ascii') + '\n' + globalSignatureTest.toString('base64'))
+    var signatureInfo = Buffer.concat([expectedSignatureAlgorithm, SKinfo.keyID, signatureTest]).toString('base64')
+    var toFile = ('untrusted comment: \n' + signatureInfo + '\n' + 'trusted comment: ' + comment + '\n' + globalSignatureTest.toString('base64'))
     console.log(toFile)
 
     // write signature to file

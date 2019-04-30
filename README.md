@@ -10,7 +10,7 @@ javaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://je
 fs.readFile(secKeyFile, function (err, secretKeyBuffer) {
   if (err) throw err
   var SKinfo = parseSecretKey(secretKeyBuffer)
-  SKinfo = extractSecretKey(passwordBuf, SKinfo.kdfSalt, SKinfo.kdfOpsLimit, SKinfo.kdfMemLimit, SKinfo.keynumSK)
+  SKinfo = extractSecretKey(passwordBuf, SKinfo)
   const secretKey = SK.secretKey
 })
 
@@ -27,6 +27,9 @@ fs.readFile(signatureFile, function (err, signatureBuffer) {
   var signatureInfo = parseSignature(signatureBuffer)
 	const signature = signatureInfo.signature
 })
+
+// sign arbitrary content
+var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted comment')
 ```
 
 ### Reading public Key
@@ -68,10 +71,14 @@ fs.readFile(signatureFile, function (err, signatureBuffer) {
 }
 ```
 
-`extractSecretKey(pwd, kdfSalt, kdfOpsLimit, kdfMemLimit, keynumSK)` takes input password as `buffer` and encrypted key information from `parseSecretKey` and returns secret key information as a `dict` of `buffer`s:
+`extractSecretKey(pwd, secretKeyInfo)` takes input password as `buffer` and encrypted key information directly from `parseSecretKey` and returns secret key information as a `dict` of `buffer`s:
 ```javascript
 {
 	keyID,
 	secretKey,
 	checksum
 }
+```
+
+### Signing content provided as `buffer`
+`signContent(content, comment, secretKeyDetails, trustComment)` takes content as `buffer` and both a comment (unsigned) and trusted comment (signed) as `string`s and secret key details directly from `extractSecretKey` and creates a `string` in minisign format and returns the `buffer` of this string.
