@@ -135,7 +135,7 @@ fs.readFile(secKeyFile, function (err, SKbuf) {
   fs.readFile(file, function (err, message) {
     if (err) throw err
     sodium.crypto_sign_detached(signatureTest, message, SKinfo.secretKey)
-    var forGlobalSig = Buffer.concat([signatureTest, comment])
+    var forGlobalSig = Buffer.concat([signatureTest, Buffer.from(comment)])
     sodium.crypto_sign_detached(globalSignatureTest, forGlobalSig, SKinfo.secretKey)
     var toFile = ('untrusted comment: \n' + Buffer.concat([expectedSignatureAlgorithm, SKinfo.keyID, signatureTest]).toString('base64') + '\n' + 'trusted comment: ' + comment.toString('ascii') + '\n' + globalSignatureTest.toString('base64'))
     console.log(toFile)
