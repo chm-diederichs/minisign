@@ -1,5 +1,25 @@
 {
   "dependencies": {
-    "sodium-native": "^2.3.0"
-  }
+    "buffer-reverse": "^1.0.1",
+    "buffer-xor": "^2.0.2",
+    "sodium-native": "^2.4.2"
+  },
+  "name": "minisign",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chm-diederichs/minisign.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chm-diederichs/minisign/issues"
+  },
+  "homepage": "https://github.com/chm-diederichs/minisign#readme",
+  "description": ""
 }
