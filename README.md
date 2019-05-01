@@ -10,8 +10,8 @@ javaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://je
 fs.readFile(secKeyFile, function (err, secretKeyBuffer) {
   if (err) throw err
   var SKinfo = parseSecretKey(secretKeyBuffer)
-  SKinfo = extractSecretKey(passwordBuf, SKinfo)
-  const secretKey = SK.secretKey
+  var SKdetails = extractSecretKey(passwordBuf, SKinfo)
+  const secretKey = SKdetails.secretKey
 })
 
 // load public key
@@ -36,7 +36,7 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 `parsePubKey(pubKeyFileContent)` takes public key file content as a `buffer` and returns key information as a `dict` of `buffer`s:
 ```javascript
 {
-	untrustedComment,
+untrustedComment,
 	signatureAlgorithm,
 	keyID,
 	publicKey
@@ -47,7 +47,7 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 `parseSignature(sigFileContent)` takes signature file content as a `buffer` and returns signature information as a `dict` of `buffer`s:
 ```javascript
 {
-	untrustedComment,
+untrustedComment,
   signatureAlgorithm,
   keyID,
   signature,
@@ -60,7 +60,7 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 `parseSecretKey(secKeyFileContent)` takes secret key file content as a `buffer` and returns encrypted key information as a `dict` of `buffer`s:
 ```javascript
 {
-	untrustedComment,
+untrustedComment,
   signatureAlgorithm,
   kdfAlgorithm,
   cksumAlgorithm,
@@ -74,7 +74,7 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 `extractSecretKey(pwd, secretKeyInfo)` takes input password as `buffer` and encrypted key information directly from `parseSecretKey` and returns secret key information as a `dict` of `buffer`s:
 ```javascript
 {
-	keyID,
+keyID,
 	secretKey,
 	checksum
 }
@@ -82,3 +82,5 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 
 ### Signing content provided as `buffer`
 `signContent(content, comment, secretKeyDetails, trustComment)` takes content as `buffer` and both a comment (unsigned) and trusted comment (signed) as `string`s and secret key details directly from `extractSecretKey` and creates a `string` in minisign format and returns the `buffer` of this string.
+
+### Verifying signature against provided content and public key
