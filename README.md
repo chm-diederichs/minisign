@@ -36,7 +36,7 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 `parsePubKey(pubKeyFileContent)` takes public key file content as a `buffer` and returns key information as a `dict` of `buffer`s:
 ```javascript
 {
-untrustedComment,
+  untrustedComment,
 	signatureAlgorithm,
 	keyID,
 	publicKey
@@ -47,7 +47,7 @@ untrustedComment,
 `parseSignature(sigFileContent)` takes signature file content as a `buffer` and returns signature information as a `dict` of `buffer`s:
 ```javascript
 {
-untrustedComment,
+  untrustedComment,
   signatureAlgorithm,
   keyID,
   signature,
@@ -60,7 +60,7 @@ untrustedComment,
 `parseSecretKey(secKeyFileContent)` takes secret key file content as a `buffer` and returns encrypted key information as a `dict` of `buffer`s:
 ```javascript
 {
-untrustedComment,
+  untrustedComment,
   signatureAlgorithm,
   kdfAlgorithm,
   cksumAlgorithm,
@@ -74,7 +74,7 @@ untrustedComment,
 `extractSecretKey(pwd, secretKeyInfo)` takes input password as `buffer` and encrypted key information directly from `parseSecretKey` and returns secret key information as a `dict` of `buffer`s:
 ```javascript
 {
-keyID,
+  keyID,
 	secretKey,
 	checksum
 }
