@@ -29,7 +29,7 @@ function parsePubkey (pubkeyBuf) {
   const keyInfo = Buffer.from(keyInfoBase64, 'base64')
 
   const signatureAlgorithm = keyInfo.subarray(0, 2)
-  const keyID = reverse(keyInfo.subarray(2, 10))
+  const keyID = keyInfo.subarray(2, 10)
   const publicKey = keyInfo.subarray(10)
 
   assert(signatureAlgorithm.equals(expectedSignatureAlgorithm))
@@ -54,7 +54,7 @@ function parseSignature (signatureBuf) {
   const sigInfo = Buffer.from(sigInfoBase64, 'base64')
 
   const signatureAlgorithm = sigInfo.subarray(0, 2)
-  const keyID = reverse(sigInfo.subarray(2, 10))
+  const keyID = sigInfo.subarray(2, 10)
   const signature = sigInfo.subarray(10, sigInfoEnd)
 
   const trustedCommentStart = sigInfoEnd + 1 + trustedPrelude.byteLength
@@ -133,13 +133,16 @@ function extractSecretKey (passwordBuf, SKinfo) {
 // takes arbitrary content buffer and returns signature buffer in minisgn format
 function signContent (content, comment, SKdetails, trustComment, sigAlgorithm = 'Ed') {
   var contentToSign
+  var signatureAlgorithm
 
   if (sigAlgorithm === 'ED') {
     var hashedContent = Buffer.alloc(sodium.crypto_generichash_BYTES_MAX)
     sodium.crypto_generichash(hashedContent, content)
     contentToSign = hashedContent
+    signatureAlgorithm = Buffer.from(sigAlgorithm)
   } else {
     contentToSign = content
+    signatureAlgorithm = Buffer.from(SKdetails.signatureAlgorithm)
   }
 
   var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
@@ -147,7 +150,7 @@ function signContent (content, comment, SKdetails, trustComment, sigAlgorithm = 
 
   sodium.crypto_sign_detached(signature, contentToSign, SKdetails.secretKey)
 
-  var signatureInfo = Buffer.concat([Buffer.from(SKdetails.signatureAlgorithm), SKdetails.keyID, signature])
+  var signatureInfo = Buffer.concat([signatureAlgorithm, SKdetails.keyID, signature])
   var untrustedComment = ('untrusted comment: ' + comment)
   var trustedComment = ('trusted comment: ' + trustComment.toString('ascii'))
 
@@ -160,12 +163,20 @@ function signContent (content, comment, SKdetails, trustComment, sigAlgorithm = 
 
 // verify the signature of an arbitrary input
 function verifySignature (signedContent, originalContent, publicKeyInfo) {
+  var contentSigned
   var signature = parseSignature(signedContent)
+  if (signature.signatureAlgorithm.toString() === 'ED') {
+    var hashedContent = Buffer.alloc(sodium.crypto_generichash_BYTES_MAX)
+    sodium.crypto_generichash(hashedContent, originalContent)
+    contentSigned = hashedContent
+  } else {
+    contentSigned = originalContent
+  }
 //  console.log(signature.signature.equals(signature.globalSignature), 'a')
   if (!(signature.keyID.equals(publicKeyInfo.keyID))) {
     return ("error: keyID's do not match")
   } else {
-    if (!(sodium.crypto_sign_verify_detached(signature.signature, originalContent, publicKeyInfo.publicKey))) {
+    if (!(sodium.crypto_sign_verify_detached(signature.signature, contentSigned, publicKeyInfo.publicKey))) {
       return ('error: signature verification failed')
     } else {
       var forGlobalSig = Buffer.concat([signature.signature, Buffer.from(signature.trustedComment)])
@@ -210,6 +221,7 @@ function keypairGen (comment, pwd, sigAlgorithm = 'Ed', kdfAlgorithm = 'Sc', cks
 
   return {
     publicKey,
+    keyID,
     fullComment,
     SKinfo
   }
@@ -229,7 +241,15 @@ fs.readFile('test.txt', function (err, message) {
 
 var newKeyInfo = keypairGen('hi', 'aa')
 //console.log(newKeyInfo.SKinfoBase64)
-console.log(extractSecretKey(Buffer.from('aa'), parseSecretKey(Buffer.concat([newKeyInfo.fullComment, newKeyInfo.SKinfo]))))
+var newSKInfo = extractSecretKey(Buffer.from('aa'), parseSecretKey(Buffer.concat([newKeyInfo.fullComment, newKeyInfo.SKinfo])))
+var signMe = Buffer.from('hash me and sign me please.')
+
+var signedTest = signContent(signMe, 'testing', newSKInfo, 'trusted', 'ED')
+console.log(signedTest)
+console.log(newKeyInfo, parseSignature(signedTest))
+
+console.log(verifySignature(signedTest, signMe, newKeyInfo))
+
 
 // load secret key file
 //fs.readFile(secKeyFile, function (err, SKbuf) {
