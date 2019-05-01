@@ -42,6 +42,7 @@ function parsePubkey (pubkeyBuf) {
   }
 }
 
+// takes signature buffer and returns info as buffers
 function parseSignature (signatureBuf) {
   assert(untrustedPrelude.equals(signatureBuf.subarray(0, untrustedCommentStart)))
 
@@ -74,6 +75,7 @@ function parseSignature (signatureBuf) {
   }
 }
 
+// takes encrypted secret key buffer and returns info as buffers
 function parseSecretKey (secretKeyBuf) {
   assert(untrustedPrelude.equals(secretKeyBuf.subarray(0, untrustedCommentStart)))
 
@@ -105,6 +107,7 @@ function parseSecretKey (secretKeyBuf) {
   }
 }
 
+// takes output from parseSecretKey() and decrypts secret key
 function extractSecretKey (passwordBuf, SKinfo) {
   var kdfOutput = Buffer.alloc(104)
   var keynumInfo
@@ -151,17 +154,17 @@ function signContent (content, comment, SKdetails, trustComment, sigAlgorithm = 
   sodium.crypto_sign_detached(signature, contentToSign, SKdetails.secretKey)
 
   var signatureInfo = Buffer.concat([signatureAlgorithm, SKdetails.keyID, signature])
-  var untrustedComment = ('untrusted comment: ' + comment)
-  var trustedComment = ('trusted comment: ' + trustComment.toString('ascii'))
+  var untrustedComment = ('untrusted comment: ' + comment + '\n')
+  var trustedComment = ('trusted comment: ' + trustComment.toString('ascii') + '\n')
 
   var forGlobalSig = Buffer.concat([signature, Buffer.from(trustComment)])
   sodium.crypto_sign_detached(globalSignature, forGlobalSig, SKdetails.secretKey)
 
-  var minisignStr = (untrustedComment + '\n' + signatureInfo.toString('base64') + '\n' + trustedComment + '\n' + globalSignature.toString('base64'))
+  var minisignStr = (untrustedComment + signatureInfo.toString('base64') + '\n' + trustedComment + globalSignature.toString('base64'))
   return Buffer.from(minisignStr)
 }
 
-// verify the signature of an arbitrary input
+// verify the signature of an arbitrary input buffer
 function verifySignature (signedContent, originalContent, publicKeyInfo) {
   var contentSigned
   var signature = parseSignature(signedContent)
@@ -172,7 +175,7 @@ function verifySignature (signedContent, originalContent, publicKeyInfo) {
   } else {
     contentSigned = originalContent
   }
-//  console.log(signature.signature.equals(signature.globalSignature), 'a')
+
   if (!(signature.keyID.equals(publicKeyInfo.keyID))) {
     return ("error: keyID's do not match")
   } else {
@@ -181,7 +184,6 @@ function verifySignature (signedContent, originalContent, publicKeyInfo) {
     } else {
       var forGlobalSig = Buffer.concat([signature.signature, Buffer.from(signature.trustedComment)])
       if (!(sodium.crypto_sign_verify_detached(signature.globalSignature, forGlobalSig, publicKeyInfo.publicKey))) {
-        console.log(signature.globalSignature.equals(signature.signature), signature.trustedComment.toString())
         return ('error: trusted comment cannot be verified')
       }
     }
@@ -189,6 +191,7 @@ function verifySignature (signedContent, originalContent, publicKeyInfo) {
   return ('signature and comment successfully verified')
 }
 
+// generate new key pair
 function keypairGen (comment, pwd, sigAlgorithm = 'Ed', kdfAlgorithm = 'Sc', cksumAlgorithm = 'B2') {
   var keyID = Buffer.alloc(8)
   var kdfSalt = Buffer.alloc(32)
@@ -217,7 +220,6 @@ function keypairGen (comment, pwd, sigAlgorithm = 'Ed', kdfAlgorithm = 'Sc', cks
   var algorithmInfo = Buffer.from(sigAlgorithm + kdfAlgorithm + cksumAlgorithm)
   var kdfLimits = Buffer.from(kdfOpsLimit.toString() + kdfMemLimit.toString())
   var SKinfo = Buffer.from(Buffer.concat([algorithmInfo, kdfSalt, kdfLimits, keynumSK]).toString('base64'))
-  console.log(publicKey, 'a')
 
   return {
     publicKey,
@@ -227,6 +229,7 @@ function keypairGen (comment, pwd, sigAlgorithm = 'Ed', kdfAlgorithm = 'Sc', cks
   }
 }
 
+// testing input
 fs.readFile('test.txt', function (err, message) {
   if (err) throw err
   fs.readFile('test.txt.minisig', function (err, signature) {
@@ -241,12 +244,11 @@ fs.readFile('test.txt', function (err, message) {
 
 var newKeyInfo = keypairGen('hi', 'aa')
 //console.log(newKeyInfo.SKinfoBase64)
-var newSKInfo = extractSecretKey(Buffer.from('aa'), parseSecretKey(Buffer.concat([newKeyInfo.fullComment, newKeyInfo.SKinfo])))
+var newSKInfo = parseSecretKey(Buffer.concat([newKeyInfo.fullComment, newKeyInfo.SKinfo]))
+var newSKdetails = extractSecretKey(Buffer.from('aa'), newSKInfo)
 var signMe = Buffer.from('hash me and sign me please.')
 
-var signedTest = signContent(signMe, 'testing', newSKInfo, 'trusted', 'ED')
-console.log(signedTest)
-console.log(newKeyInfo, parseSignature(signedTest))
+var signedTest = signContent(signMe, 'testing', newSKdetails, 'trusted', 'ED')
 
 console.log(verifySignature(signedTest, signMe, newKeyInfo))
 
