@@ -18,14 +18,14 @@ fs.readFile(secKeyFile, function (err, secretKeyBuffer) {
 fs.readFile(pubKeyFile, function (err, publicKeyBuffer) {
   if (err) throw err
   var publicKeyInfo = parsePubKey(publicKeyInfo)
-	const publicKey = publicKeyInfo.publicKey
+  const publicKey = publicKeyInfo.publicKey
 })
 
 // load and parse signature file
 fs.readFile(signatureFile, function (err, signatureBuffer) {
   if (err) throw err
   var signatureInfo = parseSignature(signatureBuffer)
-	const signature = signatureInfo.signature
+  const signature = signatureInfo.signature
 })
 
 // sign arbitrary content
@@ -37,9 +37,9 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 ```javascript
 {
   untrustedComment,
-	signatureAlgorithm,
-	keyID,
-	publicKey
+  signatureAlgorithm,
+  keyID,
+  publicKey
 }
 ```
 
