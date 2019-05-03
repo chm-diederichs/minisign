@@ -1,0 +1,1 @@
+example text to be signed using minisign.
