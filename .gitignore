@@ -1,7 +1,6 @@
 node_modules
 .DS_Store
 package-lock.json
-package.json
 test_sign1.txt
 toBeSigned.txt
 minisignCLITool.js
@@ -9,7 +8,6 @@ test.txt.minisig
 sigParse.js
 test.txt
 example.txt.minisig
-index.js
 example.txt
 keypairGen.pub
 testing.txt
