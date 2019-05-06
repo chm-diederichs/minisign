@@ -85,4 +85,4 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 ### Signing content provided as `buffer`
 `signContent(content, comment, secretKeyDetails, trustComment)` takes content as `buffer` and both a comment (unsigned) and trusted comment (signed) as `string`s and secret key details directly from `extractSecretKey` and creates a `string` in minisign format and returns the `buffer` of this string.
 
-### Verifying signature against provided content and public key
+### Verifying signature
