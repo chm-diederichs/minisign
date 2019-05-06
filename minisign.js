@@ -93,6 +93,7 @@ function parseSecretKey (secretKeyBuf) {
   const kdfMemLimit = secretKeyInfo.readUInt32LE(46)
   const keynumSK = secretKeyInfo.subarray(secretKeyInfo.length - 104)
 
+  console.log(keynumSK.slice(-1)[0], secretKeyBuf.slice(-3)[3])
   assert(keynumSK.slice(-1)[0], secretKeyBuf.slice(-2)[1])
 
   return {
