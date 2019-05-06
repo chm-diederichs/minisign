@@ -2,7 +2,8 @@
   "dependencies": {
     "buffer-reverse": "^1.0.1",
     "buffer-xor": "^2.0.2",
-    "sodium-native": "^2.4.2"
+    "sodium-native": "^2.4.2",
+    "tape": "^4.10.1"
   },
   "name": "minisign",
   "version": "1.0.0",
@@ -24,5 +25,5 @@
     "url": "https://github.com/chm-diederichs/minisign/issues"
   },
   "homepage": "https://github.com/chm-diederichs/minisign#readme",
-  "description": ""
+  "description": "javaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://jedisct1.github.io/minisign/)."
 }
