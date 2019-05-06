@@ -8,7 +8,7 @@ var reverse = require('buffer-reverse')
 test('MINISIGN generated key', function (t) {
   const comment = 'minisign public key A4570084F07E7F64'
 
-  fs.readFile('./fixtures/minisign.pub', function (err, pubkey) {
+  fs.readFile('./test/fixtures/minisign.pub', function (err, pubkey) {
     var PKinfo = minisign.parsePubKey(pubkey)
     var formatKeyID = reverse(PKinfo.keyID).toString('hex').toUpperCase()
 
@@ -34,7 +34,7 @@ test('minisign.js generated key', function (t) {
 })
 
 test('minisign generated key with comment removed', function (t) {
-  fs.readFile('./fixtures/missingComment.pub', function (err, pubkey) {
+  fs.readFile('./test/fixtures/missingComment.pub', function (err, pubkey) {
     t.error(err)
     t.throws(() => minisign.parsePubKey(pubkey), '[ERR_ASSERTION]')
     t.end()
@@ -42,7 +42,7 @@ test('minisign generated key with comment removed', function (t) {
 })
 
 test('key with long comment', function (t) {
-  fs.readFile('./fixtures/longComment.pub', function (err, pubkey) {
+  fs.readFile('./test/fixtures/longComment.pub', function (err, pubkey) {
     t.error(err)
     var PKinfo = minisign.parsePubKey(pubkey)
 
@@ -52,7 +52,7 @@ test('key with long comment', function (t) {
 })
 
 test('minisign key with one character removed', function (t) {
-  fs.readFile('./fixtures/invalidKey.pub', function (err, pubkey) {
+  fs.readFile('./test/fixtures/invalidKey.pub', function (err, pubkey) {
     t.error(err)
     t.throws(() => minisign.parsePubKey(pubkey), '[ERR_ASSERTION]')
     t.end()

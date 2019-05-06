@@ -6,7 +6,7 @@ test('sign empty content with MINISIGN key, no tComment given', function (t) {
   var comment = 'untrusted comment: signature from minisign secret key'
   var noContent = Buffer.alloc(0)
 
-  fs.readFile('./fixtures/minisign.key', function (err, SK) {
+  fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey('', SKinfo)
@@ -18,7 +18,7 @@ test('sign empty content with MINISIGN key, no tComment given', function (t) {
     t.equal(signOutput.sigInfoBase64.length, 100)
     t.equal(signOutput.globalSigBase64.length, 89)
 
-    fs.readFile('./fixtures/minisign.pub', function (err, PK) {
+    fs.readFile('./test/fixtures/minisign.pub', function (err, PK) {
       t.error(err)
       var PKinfo = minisign.parsePubKey(PK)
       t.ok(minisign.verifySignature(signOutput.outputBuf, noContent, PKinfo))
@@ -30,12 +30,12 @@ test('sign empty content with MINISIGN key, no tComment given', function (t) {
 test('sign emoji content with minisign key', function (t) {
   var comment = 'untrusted comment: signature from minisign secret key'
 
-  fs.readFile('./fixtures/minisign.key', function (err, SK) {
+  fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey('', SKinfo)
 
-    fs.readFile('./fixtures/emoji.txt', function (err, content) {
+    fs.readFile('./test/fixtures/emoji.txt', function (err, content) {
       t.error(err)
 
       var signOutput = minisign.signContent(content, SKdetails)
@@ -45,7 +45,7 @@ test('sign emoji content with minisign key', function (t) {
       t.equal(signOutput.sigInfoBase64.length, 100)
       t.equal(signOutput.globalSigBase64.length, 89)
 
-      fs.readFile('./fixtures/minisign.pub', function (err, PK) {
+      fs.readFile('./test/fixtures/minisign.pub', function (err, PK) {
         t.error(err)
         var PKinfo = minisign.parsePubKey(PK)
         t.ok(minisign.verifySignature(signOutput.outputBuf, content, PKinfo))
@@ -58,12 +58,12 @@ test('sign emoji content with minisign key', function (t) {
 test('sign large input content, no opts', function (t) {
   var comment = 'untrusted comment: signature from minisign secret key'
 
-  fs.readFile('./fixtures/minisign.key', function (err, SK) {
+  fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey('', SKinfo)
 
-    fs.readFile('./fixtures/longComment.txt.minisig', function (err, content) {
+    fs.readFile('./test/fixtures/longComment.txt.minisig', function (err, content) {
       t.error(err)
 
       var signOutput = minisign.signContent(content, SKdetails)
@@ -73,7 +73,7 @@ test('sign large input content, no opts', function (t) {
       t.equal(signOutput.sigInfoBase64.length, 100)
       t.equal(signOutput.globalSigBase64.length, 89)
 
-      fs.readFile('./fixtures/minisign.pub', function (err, PK) {
+      fs.readFile('./test/fixtures/minisign.pub', function (err, PK) {
         t.error(err)
         var PKinfo = minisign.parsePubKey(PK)
         t.ok(minisign.verifySignature(signOutput.outputBuf, content, PKinfo))
@@ -87,12 +87,12 @@ test('sign with large, emoji comment / tComment', function (t) {
   var comment = 'untrusted comment: signature from minisign secret key'
   var contentToSign = Buffer.from('sign me please.')
 
-  fs.readFile('./fixtures/minisign.key', function (err, SK) {
+  fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey('', SKinfo)
 
-    fs.readFile('./fixtures/emoji.txt', function (err, emoji) {
+    fs.readFile('./test/fixtures/emoji.txt', function (err, emoji) {
       t.error(err)
 
       var opts1 = {
@@ -116,7 +116,7 @@ test('sign with large, emoji comment / tComment', function (t) {
       t.equal(signOutput2.sigInfoBase64.length, 100)
       t.equal(signOutput2.globalSigBase64.length, 89)
 
-      fs.readFile('./fixtures/minisign.pub', function (err, PK) {
+      fs.readFile('./test/fixtures/minisign.pub', function (err, PK) {
         t.error(err)
         var PKinfo = minisign.parsePubKey(PK)
         t.ok(minisign.verifySignature(signOutput1.outputBuf, contentToSign, PKinfo))
@@ -130,16 +130,16 @@ test('sign with large, emoji comment / tComment', function (t) {
 test('use invalid secrety key', function (t) {
   var toSign = Buffer.from('sign me please.')
 
-  fs.readFile('./fixtures/noComment.key', function (err, SK) {
+  fs.readFile('./test/fixtures/noComment.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey('', SKinfo)
 
-    fs.readFile('./fixtures/example.txt', function (err, content) {
+    fs.readFile('./test/fixtures/example.txt', function (err, content) {
       t.error(err)
 
       var signOutput = minisign.signContent(toSign, SKdetails)
-      fs.readFile('./fixtures/minisign.pub', function (err, PK) {
+      fs.readFile('./test/fixtures/minisign.pub', function (err, PK) {
         t.error(err)
 
         var PKinfo = minisign.parsePubKey(PK)
@@ -154,12 +154,12 @@ test('prehash and sign', function (t) {
   var comment = 'untrusted comment: signature from minisign secret key'
   var contentToSign = Buffer.from('sign me please.')
 
-  fs.readFile('./fixtures/minisign.key', function (err, SK) {
+  fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey('', SKinfo)
 
-    fs.readFile('./fixtures/longTrustedComment.txt', function (err, content) {
+    fs.readFile('./test/fixtures/longTrustedComment.txt', function (err, content) {
       t.error(err)
 
       var opts = {
@@ -174,7 +174,7 @@ test('prehash and sign', function (t) {
       t.equal(signOutput.sigInfoBase64.length, 100)
       t.equal(signOutput.globalSigBase64.length, 89)
 
-      fs.readFile('./fixtures/minisign.pub', function (err, PK) {
+      fs.readFile('./test/fixtures/minisign.pub', function (err, PK) {
         t.error(err)
         var PKinfo = minisign.parsePubKey(PK)
         t.ok(minisign.verifySignature(signOutput.outputBuf, contentToSign, PKinfo))
@@ -187,12 +187,12 @@ test('prehash and sign', function (t) {
 test('use invalid signature algorithm', function (t) {
   var toSign = Buffer.from('sign me please.')
 
-  fs.readFile('./fixtures/noComment.key', function (err, SK) {
+  fs.readFile('./test/fixtures/noComment.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey('', SKinfo)
 
-    fs.readFile('./fixtures/example.txt', function (err, content) {
+    fs.readFile('./test/fixtures/example.txt', function (err, content) {
       t.error(err)
 
       var opts = {
