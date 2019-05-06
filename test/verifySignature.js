@@ -3,7 +3,6 @@ var test = require('tape')
 var minisign = require('../minisign.js')
 var fs = require('fs')
 var sodium = require('sodium-native')
-var xor = require('buffer-xor')
 
 test('verify minisign generated signature', function (t) {
   fs.readFile('./fixtures/example.txt.minisig', function (err, signature) {
@@ -99,7 +98,7 @@ test('emoji trusted comment', function (t) {
   })
 })
 
-test.only('signContent generated input', function (t) {
+test('signContent generated input', function (t) {
   var toSign = Buffer.alloc(200)
   sodium.randombytes_buf(toSign)
 
@@ -118,30 +117,3 @@ test.only('signContent generated input', function (t) {
     })
   })
 })
-
-// for reference
-function verifySignature (signedContent, originalContent, publicKeyInfo) {
-  var contentSigned
-  var signature = parseSignature(signedContent)
-  if (signature.signatureAlgorithm.toString() === 'ED') {
-    var hashedContent = Buffer.alloc(sodium.crypto_generichash_BYTES_MAX)
-    sodium.crypto_generichash(hashedContent, originalContent)
-    contentSigned = hashedContent
-  } else {
-    contentSigned = originalContent
-  }
-
-  if (!(signature.keyID.equals(publicKeyInfo.keyID))) {
-    return ("error: keyID's do not match")
-  } else {
-    if (!(sodium.crypto_sign_verify_detached(signature.signature, contentSigned, publicKeyInfo.publicKey))) {
-      return ('error: signature verification failed')
-    } else {
-      var forGlobalSig = Buffer.concat([signature.signature, Buffer.from(signature.trustedComment)])
-      if (!(sodium.crypto_sign_verify_detached(signature.globalSignature, forGlobalSig, publicKeyInfo.publicKey))) {
-        return ('error: trusted comment cannot be verified')
-      }
-    }
-  }
-  return ('signature and comment successfully verified')
-}

@@ -112,37 +112,22 @@ test('MINISIGN signature using minisign.js key', function (t) {
   })
 })
 
-// cases to test: signContent output
+test('signContent generated input', function (t) {
+  var toSign = Buffer.alloc(200)
+  sodium.randombytes_buf(toSign)
 
-// for reference
-function parseSignature (signatureBuf) {
-  assert(untrustedPrelude.equals(signatureBuf.subarray(0, untrustedCommentStart)))
+  fs.readFile('./fixtures/minisign.key', function (err, SK) {
+    t.error(err)
+    var SKinfo = minisign.parseSecretKey(SK)
+    var SKdetails = minisign.extractSecretKey('', SKinfo)
 
-  const untrustedCommentEnd = signatureBuf.indexOf('\n', untrustedCommentStart)
-  const untrustedComment = signatureBuf.subarray(untrustedCommentStart, untrustedCommentEnd)
+    var signedOutput = minisign.signContent(toSign, SKdetails).outputBuf
+    var sigInfo = minisign.parseSignature(signedOutput)
 
-  const sigInfoStart = untrustedCommentEnd + 1
-  const sigInfoEnd = signatureBuf.indexOf('\n', sigInfoStart)
-  const sigInfoBase64 = signatureBuf.subarray(sigInfoStart, sigInfoEnd).toString()
-  const sigInfo = Buffer.from(sigInfoBase64, 'base64')
-
-  const signatureAlgorithm = sigInfo.subarray(0, 2)
-  const keyID = sigInfo.subarray(2, 10)
-  const signature = sigInfo.subarray(10, sigInfoEnd)
-
-  const trustedCommentStart = sigInfoEnd + 1 + trustedPrelude.byteLength
-  const trustedCommentEnd = signatureBuf.indexOf('\n', trustedCommentStart)
-  const trustedComment = signatureBuf.subarray(trustedCommentStart, trustedCommentEnd)
-
-  const globalSignatureBase64 = signatureBuf.subarray(trustedCommentEnd + 1).toString()
-  const globalSignature = Buffer.from(globalSignatureBase64, 'base64')
-
-  return {
-    untrustedComment,
-    signatureAlgorithm,
-    keyID,
-    signature,
-    trustedComment,
-    globalSignature
-  }
-}
+    t.equal(sigInfo.signature.length, sodium.crypto_sign_BYTES)
+    t.deepEqual(sigInfo.signatureAlgorithm, Buffer.from('Ed'))
+    t.equal(sigInfo.keyID.byteLength, 8)
+    t.equal(sigInfo.globalSignature.length, sodium.crypto_sign_BYTES)
+    t.end()
+  })
+})

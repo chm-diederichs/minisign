@@ -1,32 +1,16 @@
 // issues:
-// ordering of keyID (minisign LE vs js BE)
-// output- all buffers or strings for sigAlgorithm etc?
-// what is signature algorithm in key files?
+// what is purpose of signature algorithm in key generation?
 // make assertion errors more specific
-// 'default' argument structure is wrong
 
-const fs = require('fs')
 const assert = require('assert')
 const sodium = require('sodium-native')
 const xor = require('buffer-xor')
-const reverse = require('buffer-reverse')
 
-// put path for file to be signed and signature file here
-const file = 'test.txt'
-const signatureFile = `${file}.minisig`
-const pubKeyFile = 'minisign.pub'
-const secKeyFile = 'minisign.key'
 var defaultComment = 'signature from minisign secret key'
-var trustedComment = '<insert trusted comment here>'
 
 const untrustedPrelude = Buffer.from('untrusted comment: ')
 const trustedPrelude = Buffer.from('trusted comment: ')
 const untrustedCommentStart = untrustedPrelude.byteLength
-const expectedSignatureAlgorithm = Buffer.from('Ed')
-const lineBreak = Buffer.from('\n')
-
-// password for kdf algorithm - must correspond to the minisign public key
-const passwordBuf = Buffer.from('')
 
 function parsePubKey (pubkeyBuf) {
   assert(untrustedPrelude.equals(pubkeyBuf.subarray(0, untrustedCommentStart)))
@@ -50,7 +34,7 @@ function parsePubKey (pubkeyBuf) {
   }
 }
 
-// totest: signatureBuf -> 
+// totest: signatureBuf ->
 // takes signature buffer and returns info as buffers
 function parseSignature (signatureBuf) {
   assert(untrustedPrelude.equals(signatureBuf.subarray(0, untrustedCommentStart)))
@@ -156,7 +140,11 @@ function extractSecretKey (pwd, SKinfo) {
 }
 
 // takes arbitrary content buffer and returns signature buffer in minisgn format
-function signContent (content, SKdetails, comment = defaultComment, tComment = null, sigAlgorithm = 'Ed') {
+function signContent (content, SKdetails, opts) {
+  if (opts == null) opts = {}
+  var comment = opts.comment || defaultComment
+  var tComment = opts.tComment || (Math.floor(Date.now() / 1000)).toString('10')
+  var sigAlgorithm = opts.sigAlgorithm || 'Ed'
   var contentToSign
   var signatureAlgorithm
   var trustComment
@@ -167,14 +155,9 @@ function signContent (content, SKdetails, comment = defaultComment, tComment = n
     contentToSign = hashedContent
     signatureAlgorithm = Buffer.from(sigAlgorithm)
   } else {
+    assert(sigAlgorithm === 'Ed', 'algorithm not recognised')
     contentToSign = content
     signatureAlgorithm = Buffer.from(SKdetails.signatureAlgorithm)
-  }
-
-  if (tComment == null) {
-    trustComment = (Math.floor(Date.now() / 1000)).toString('10')
-  } else {
-    trustComment = tComment
   }
 
   var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
@@ -184,10 +167,10 @@ function signContent (content, SKdetails, comment = defaultComment, tComment = n
 
   var signatureInfo = Buffer.concat([signatureAlgorithm, SKdetails.keyID, signature])
   var untrustedComment = Buffer.from('untrusted comment: ' + comment + '\n')
-  var trustedComment = Buffer.from('\ntrusted comment: ' + trustComment + '\n')
+  var trustedComment = Buffer.from('\ntrusted comment: ' + tComment + '\n')
   var sigInfoBase64 = Buffer.from(signatureInfo.toString('base64'))
 
-  var forGlobalSig = Buffer.concat([signature, Buffer.from(trustComment)])
+  var forGlobalSig = Buffer.concat([signature, Buffer.from(tComment)])
   sodium.crypto_sign_detached(globalSignature, forGlobalSig, SKdetails.secretKey)
   var globalSigBase64 = Buffer.from(globalSignature.toString('base64') + '\n')
 
@@ -230,8 +213,20 @@ function verifySignature (signedContent, originalContent, publicKeyInfo) {
 }
 
 // generate new key pair
-function keypairGen (pwd, comment = null, sigAlgorithm = 'Ed', kdfAlgorithm = 'Sc', cksumAlgorithm = 'B2') {
+function keypairGen (pwd, opts) {
   var keyID = Buffer.alloc(8)
+  sodium.randombytes_buf(keyID)
+
+  var PKdComment = 'minisign public key' + keyID.toString('hex').toUpperCase()
+  var SKdComment = 'minisign encrypted secret key'
+
+  if (opts == null) opts = {}
+  var PKcomment = opts.PKcomment || opts.SKcomment || PKdComment
+  var SKcomment = opts.SKcomment || opts.PKcomment || SKdComment
+  var sigAlgorithm = opts.sigAlgorithm || 'Ed'
+  var kdfAlgorithm = opts.kdfAlgorithm || 'Sc'
+  var cksumAlgorithm = opts.cksumAlgorithm || 'B2'
+
   var kdfSalt = Buffer.alloc(32)
   var kdfOutput = Buffer.alloc(104)
 
@@ -239,15 +234,11 @@ function keypairGen (pwd, comment = null, sigAlgorithm = 'Ed', kdfAlgorithm = 'S
   var secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
   var checkSum = Buffer.alloc(sodium.crypto_generichash_BYTES)
 
-  sodium.randombytes_buf(keyID)
   sodium.randombytes_buf(kdfSalt)
   sodium.crypto_sign_keypair(publicKey, secretKey)
 
-  if (comment === null) {
-    comment = ('minisign public key ' + keyID.toString('hex').toUpperCase())
-  }
-
-  var fullComment = 'untrusted comment: ' + comment + '\n'
+  var PKfullComment = 'untrusted comment: ' + PKcomment + '\n'
+  var SKfullComment = 'untrusted comment: ' + SKcomment + '\n'
 
   const kdfOpsLimit = sodium.crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_SENSITIVE
   const kdfMemLimit = sodium.crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_SENSITIVE
@@ -267,8 +258,8 @@ function keypairGen (pwd, comment = null, sigAlgorithm = 'Ed', kdfAlgorithm = 'S
   var SKinfo = Buffer.concat([SKalgorithmInfo, kdfSalt, kdfLimits, keynumSK]).toString('base64') + '\n'
   var PKinfo = Buffer.concat([Buffer.from(sigAlgorithm), keyID, publicKey]).toString('base64') + '\n'
 
-  var SKoutputBuffer = Buffer.from(fullComment + SKinfo)
-  var PKoutputBuffer = Buffer.from(fullComment + PKinfo)
+  var SKoutputBuffer = Buffer.from(SKfullComment + SKinfo)
+  var PKoutputBuffer = Buffer.from(PKfullComment + PKinfo)
 
   return {
     publicKey,
@@ -280,28 +271,6 @@ function keypairGen (pwd, comment = null, sigAlgorithm = 'Ed', kdfAlgorithm = 'S
   }
 }
 
-// fs.readFile('./test/fixtures/longComment.pub', function (err, data) {
-//   if (err) throw err
-//   var newKeys = keypairGen(data)
-//   fs.writeFile('./test/fixtures/longPwd.pub', newKeys.PKoutputBuffer.toString(), function (err) {
-//     if (err) throw err
-//   })
-//   fs.writeFile('./test/fixtures/longPwd.key', newKeys.SKoutputBuffer.toString(), function (err) {
-//     if (err) throw err
-//   })
-// })
-
-// fs.writeFile('./test/fixtures/keypairGen.key', newKeys.SKoutputBuffer.toString(), function (err) {
-//   if (err) throw err
-// })
-
-// fs.readFile('./test/fixtures/noString.key', function (err, nostrkey) {
-//   if (err) throw err
-//   fs.readFile('./test/fixtures/test.key', function (err, testkey) {
-//     if (err) throw err
-//   })
-// })
-
 module.exports = {
   parsePubKey: parsePubKey,
   parseSignature: parseSignature,
@@ -311,56 +280,3 @@ module.exports = {
   verifySignature: verifySignature,
   keypairGen: keypairGen
 }
-
-// testing input
-//fs.readFile('test.txt', function (err, message) {
-//  if (err) throw err
-//  fs.readFile('test.txt.minisig', function (err, signature) {
-//    if (err) throw err
-//    fs.readFile('minisign.pub', function (err, publickey) {
-//      if (err) throw err
-//      var pubKey = parsePubKey(publickey)
-//      // console.log(verifySignature(signature, message, pubKey))
-//    })
-//  })
-//})
-
-//var newKeyInfo = keypairGen('hi', 'aa')
-////console.log(newKeyInfo.SKinfoBase64)
-//var newSKInfo = parseSecretKey(Buffer.concat([newKeyInfo.fullComment, newKeyInfo.SKinfo]))
-//var newSKdetails = extractSecretKey(Buffer.from('aa'), newSKInfo)
-//var signMe = Buffer.from('hash me and sign me please.')
-
-//var signedTest = signContent(signMe, 'testing', newSKdetails, 'trusted', 'ED')
-//var newPublicKey = Buffer.concat([Buffer.from(newKeyInfo.sigAlgorithm), newKeyInfo.keyID, newKeyInfo.publicKey])
-//console.log(newPublicKey.toString('base64'))
-//fs.writeFile('toBeSigned.txt', signMe.toString(), function (err) {
-//  if (err) throw err
-//})
-//fs.writeFile('test_sign1.txt', signedTest.toString(), function (err) {
-//  if (err) throw err
-//})
-//console.log(verifySignature(signedTest, signMe, newKeyInfo))
-//console.log(newKeyInfo.publicKey, reverse(Buffer.from('RWTFHh41viOjbhmRmNTBaqVkhZjJQxmzC/sVWgD7K31sqfapzWWldrjT', 'base64').subarray(2, 10)).toString('hex'))
-
-// load secret key file
-//fs.readFile(secKeyFile, function (err, SKbuf) {
-//  if (err) throw err
-//  var SKinfo = parseSecretKey(SKbuf)
-//  console.log(SKinfo)
-//  var SKdetails = extractSecretKey(passwordBuf, SKinfo)
-//})
-
-//  // load content to be signed
-//  fs.readFile(file, function (err, message) {
-//    if (err) throw err
-//    var toFile = signContent(message, '<insert comment here>', SKdetails, '<insert trusted comment here>')
-//    console.log(toFile)
-
-//    // write signature to file
-//    fs.writeFile(signatureFile, toFile.toString(), function (err) {
-//      if (err) throw err
-//      console.log(`minsign signature saved to ${signatureFile}`)
-//    })
-//  })
-//})

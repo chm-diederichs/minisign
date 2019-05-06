@@ -2,7 +2,7 @@ var test = require('tape')
 var minisign = require('../minisign')
 var fs = require('fs')
 
-test.only('key generation with empty password', function (t) {
+test('key generation with empty password', function (t) {
   const untrustedPrelude = Buffer.from('untrusted comment: ')
   var endIndex = untrustedPrelude.byteLength
   var noString = ''
@@ -44,19 +44,23 @@ test('key generation with emoji password', function (t) {
   const untrustedPrelude = Buffer.from('untrusted comment: ')
   var endIndex = untrustedPrelude.byteLength
   var emojiString = 'testing👫'
-  var comment = 'minisign encrypted secret key'
 
-  var emojiPwdKey = minisign.keypairGen(comment, emojiString)
+  var emojiPwdKey = minisign.keypairGen(emojiString)
 
-  var keyOutput = Buffer.concat([emojiPwdKey.fullComment, emojiPwdKey.SKinfo])
+  var SKoutput = emojiPwdKey.SKoutputBuffer
+  var PKoutput = emojiPwdKey.PKoutputBuffer
+  var PKinfo = Buffer.from(PKoutput.slice(-57, -1).toString(), 'base64')
 
-  t.deepEqual(keyOutput.subarray(0, endIndex), untrustedPrelude)
+  t.deepEqual(PKoutput.subarray(0, endIndex), untrustedPrelude)
+  t.deepEqual(SKoutput.subarray(0, endIndex), untrustedPrelude)
 
   fs.readFile('./fixtures/emojiString.key', function (err, SKinfo) {
     t.error(err)
-    t.equal(keyOutput.byteLength, SKinfo.byteLength)
+    t.equal(SKoutput.byteLength, SKinfo.byteLength)
+    t.deepEqual(emojiPwdKey.publicKey, PKinfo.subarray(-32))
     t.end()
   })
 })
 
 // have to add test for no comment provided. have to rewrite tests. --> now test PKoutput and SKoutput.
+// now need to test all options combinations.
