@@ -7,9 +7,12 @@
   "name": "minisign",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
+  "devDependencies": {
+    "standard": "^12.0.1"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pretest": "standard",
+    "test": "tape test/*.js"
   },
   "repository": {
     "type": "git",
