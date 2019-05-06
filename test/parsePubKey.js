@@ -6,7 +6,7 @@ var sodium = require('sodium-native')
 var reverse = require('buffer-reverse')
 
 test('MINISIGN generated key', function (t) {
-  const comment = 'minisign public key 8EDD81CA61E1057D'
+  const comment = 'minisign public key A4570084F07E7F64'
 
   fs.readFile('./fixtures/minisign.pub', function (err, pubkey) {
     var PKinfo = minisign.parsePubKey(pubkey)
@@ -47,7 +47,6 @@ test('key with long comment', function (t) {
   fs.readFile('./fixtures/longComment.pub', function (err, pubkey) {
     t.error(err)
     var PKinfo = minisign.parsePubKey(pubkey)
-    console.log(PKinfo.publicKey.toString('base64'))
 
     t.equals(PKinfo.publicKey.byteLength, sodium.crypto_sign_PUBLICKEYBYTES)
     t.end()
