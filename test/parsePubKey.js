@@ -21,18 +21,16 @@ test('MINISIGN generated key', function (t) {
 })
 
 test('minisign.js generated key', function (t) {
-  const comment = 'minisign public key 4C2AA548072B9EE7'
+  var keyGen = minisign.keypairGen('')
+  var key = minisign.formatKeys(keyGen)
 
-  fs.readFile('./fixtures/keypairGen.pub', function (err, pubkey) {
-    var PKinfo = minisign.parsePubKey(pubkey)
-    var formatKeyID = PKinfo.keyID.toString('hex').toUpperCase()
+  var PKinfo = minisign.parsePubKey(key.PKoutputBuffer)
+  var formatKeyID = PKinfo.keyID.toString('hex').toUpperCase()
 
-    t.error(err)
-    t.equals(PKinfo.untrustedComment.toString(), comment)
-    t.equals(formatKeyID, comment.slice(20, 36))
-    t.equals(PKinfo.publicKey.byteLength, sodium.crypto_sign_PUBLICKEYBYTES)
-    t.end()
-  })
+  t.equals(PKinfo.untrustedComment.toString(), keyGen.PKcomment)
+  t.equals(formatKeyID, keyGen.PKcomment.slice(20, 36))
+  t.equals(PKinfo.publicKey.byteLength, sodium.crypto_sign_PUBLICKEYBYTES)
+  t.end()
 })
 
 test('minisign generated key with comment removed', function (t) {
@@ -61,29 +59,6 @@ test('minisign key with one character removed', function (t) {
   })
 })
 
-test('minisign key with no line break')
+// test('minisign key with no line break')
 
-test('minisign key with extra line breaks')
-
-// for reference
-function parsePubKey (pubkeyBuf) {
-  //assert(untrustedPrelude.equals(pubkeyBuf.subarray(0, untrustedCommentStart)))
-  const untrustedCommentEnd = pubkeyBuf.indexOf('\n', untrustedCommentStart)
-  const untrustedComment = pubkeyBuf.subarray(untrustedCommentStart, untrustedCommentEnd)
-
-  const keyInfoStart = untrustedCommentStart + untrustedComment.byteLength + 1
-  const keyInfoBase64 = pubkeyBuf.subarray(keyInfoStart, pubkeyBuf.indexOf('\n', keyInfoStart)).toString()
-  const keyInfo = Buffer.from(keyInfoBase64, 'base64')
-
-  const signatureAlgorithm = keyInfo.subarray(0, 2)
-  const keyID = keyInfo.subarray(2, 10)
-  const publicKey = keyInfo.subarray(10)
-
-  //assert(signatureAlgorithm.equals(expectedSignatureAlgorithm))
-  return {
-    untrustedComment,
-    signatureAlgorithm,
-    keyID,
-    publicKey
-  }
-}
+// test('minisign key with extra line breaks')

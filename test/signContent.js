@@ -206,7 +206,8 @@ test('use invalid signature algorithm', function (t) {
 })
 
 test('sign with keypairGen keys', function (t) {
-  var key = minisign.keypairGen('')
+  var keyGen = minisign.keypairGen('')
+  var key = minisign.formatKeys(keyGen)
 
   var PK = minisign.parsePubKey(key.PKoutputBuffer)
   var SKinfo = minisign.parseSecretKey(key.SKoutputBuffer)
