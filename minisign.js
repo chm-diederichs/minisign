@@ -85,9 +85,9 @@ function parseSecretKey (secretKeyBuf) {
 
   assert(secretKeyInfoBase64.length = 212)
 
-  const signatureAlgorithm = secretKeyInfo.subarray(0, 2).toString()
-  const kdfAlgorithm = secretKeyInfo.subarray(2, 4).toString()
-  const cksumAlgorithm = secretKeyInfo.subarray(4, 6).toString()
+  const signatureAlgorithm = secretKeyInfo.subarray(0, 2)
+  const kdfAlgorithm = secretKeyInfo.subarray(2, 4)
+  const cksumAlgorithm = secretKeyInfo.subarray(4, 6)
   const kdfSalt = secretKeyInfo.subarray(6, 38)
   const kdfOpsLimit = secretKeyInfo.readUInt32LE(38)
   const kdfMemLimit = secretKeyInfo.readUInt32LE(46)
@@ -122,10 +122,9 @@ function extractSecretKey (pwd, SKinfo) {
   const keyID = keynumInfo.subarray(0, 8)
   const secretKey = keynumInfo.subarray(8, 72)
   const checkSum = keynumInfo.subarray(72)
-  const signatureAlgorithm = SKinfo.signatureAlgorithm
-  const sigAlgoBuf = Buffer.from(SKinfo.signatureAlgorithm)
+  const signatureAlgorithm = SKinfo.signatureAlgorithm.toString()
 
-  var sumCheckData = Buffer.concat([sigAlgoBuf, keyID, secretKey])
+  var sumCheckData = Buffer.concat([SKinfo.signatureAlgorithm, keyID, secretKey])
   sodium.crypto_generichash(sumCheck, sumCheckData)
 
   assert(sumCheck.equals(checkSum))
@@ -144,18 +143,18 @@ function signContent (content, SKdetails, opts) {
   if (opts == null) opts = {}
   var comment = opts.comment || defaultComment
   var tComment = opts.tComment || (Math.floor(Date.now() / 1000)).toString('10')
-  var sigAlgorithm = opts.sigAlgorithm || 'Ed'
+  var sigAlgorithm = Buffer.from(opts.sigAlgorithm || 'Ed')
   var contentToSign
   var signatureAlgorithm
   var trustComment
 
-  if (sigAlgorithm === 'ED') {
+  if (sigAlgorithm.equals(Buffer.from('ED'))) {
     var hashedContent = Buffer.alloc(sodium.crypto_generichash_BYTES_MAX)
     sodium.crypto_generichash(hashedContent, content)
     contentToSign = hashedContent
     signatureAlgorithm = Buffer.from(sigAlgorithm)
   } else {
-    assert(sigAlgorithm === 'Ed', 'algorithm not recognised')
+    assert(sigAlgorithm.equals(Buffer.from('Ed')), 'algorithm not recognised')
     contentToSign = content
     signatureAlgorithm = Buffer.from(SKdetails.signatureAlgorithm)
   }
@@ -189,7 +188,7 @@ function signContent (content, SKdetails, opts) {
 function verifySignature (signedContent, originalContent, publicKeyInfo) {
   var contentSigned
   var signature = parseSignature(signedContent)
-  if (signature.signatureAlgorithm.toString() === 'ED') {
+  if (signature.signatureAlgorithm.equals(Buffer.from('ED'))) {
     var hashedContent = Buffer.alloc(sodium.crypto_generichash_BYTES_MAX)
     sodium.crypto_generichash(hashedContent, originalContent)
     contentSigned = hashedContent
@@ -217,15 +216,15 @@ function keypairGen (pwd, opts) {
   var keyID = Buffer.alloc(8)
   sodium.randombytes_buf(keyID)
 
-  var PKdComment = 'minisign public key' + keyID.toString('hex').toUpperCase()
+  var PKdComment = 'minisign public key ' + keyID.toString('hex').toUpperCase()
   var SKdComment = 'minisign encrypted secret key'
 
   if (opts == null) opts = {}
   var PKcomment = opts.PKcomment || opts.SKcomment || PKdComment
   var SKcomment = opts.SKcomment || opts.PKcomment || SKdComment
-  var sigAlgorithm = opts.sigAlgorithm || 'Ed'
-  var kdfAlgorithm = opts.kdfAlgorithm || 'Sc'
-  var cksumAlgorithm = opts.cksumAlgorithm || 'B2'
+  var sigAlgorithm = Buffer.from(opts.sigAlgorithm || 'Ed')
+  var kdfAlgorithm = Buffer.from(opts.kdfAlgorithm || 'Sc')
+  var cksumAlgorithm = Buffer.from(opts.cksumAlgorithm || 'B2')
 
   var kdfSalt = Buffer.alloc(32)
   var kdfOutput = Buffer.alloc(104)
@@ -237,35 +236,53 @@ function keypairGen (pwd, opts) {
   sodium.randombytes_buf(kdfSalt)
   sodium.crypto_sign_keypair(publicKey, secretKey)
 
-  var PKfullComment = 'untrusted comment: ' + PKcomment + '\n'
-  var SKfullComment = 'untrusted comment: ' + SKcomment + '\n'
-
   const kdfOpsLimit = sodium.crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_SENSITIVE
   const kdfMemLimit = sodium.crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_SENSITIVE
   var kdfLimits = Buffer.alloc(16)
   kdfLimits.writeUInt32LE(kdfOpsLimit, 0)
   kdfLimits.writeUInt32LE(kdfMemLimit, 8)
 
-  var checkSumData = Buffer.concat([Buffer.from(sigAlgorithm), keyID, secretKey])
+  var checkSumData = Buffer.concat([sigAlgorithm, keyID, secretKey])
   sodium.crypto_generichash(checkSum, checkSumData)
 
   var keynumData = Buffer.concat([keyID, secretKey, checkSum])
   sodium.crypto_pwhash_scryptsalsa208sha256(kdfOutput, Buffer.from(pwd), kdfSalt, kdfOpsLimit, kdfMemLimit)
   var keynumSK = xor(kdfOutput, keynumData)
 
+  return {
+    publicKey,
+    sigAlgorithm,
+    keyID,
+    kdfAlgorithm,
+    cksumAlgorithm,
+    kdfSalt,
+    kdfLimits,
+    keynumSK,
+    SKcomment,
+    PKcomment
+  }
+}
+
+function formatKeys (keyGen) {
+  var sigAlgorithm = keyGen.sigAlgorithm
+  var kdfAlgorithm = keyGen.kdfAlgorithm
+  var cksumAlgorithm = keyGen.cksumAlgorithm
+  var kdfSalt = keyGen.kdfSalt
+  var kdfLimits = keyGen.kdfLimits
+  var keynumSK = keyGen.keynumSK
+
+  var PKfullComment = 'untrusted comment: ' + keyGen.PKcomment + '\n'
+  var SKfullComment = 'untrusted comment: ' + keyGen.SKcomment + '\n'
+
   var SKalgorithmInfo = Buffer.from(sigAlgorithm + kdfAlgorithm + cksumAlgorithm)
 
   var SKinfo = Buffer.concat([SKalgorithmInfo, kdfSalt, kdfLimits, keynumSK]).toString('base64') + '\n'
-  var PKinfo = Buffer.concat([Buffer.from(sigAlgorithm), keyID, publicKey]).toString('base64') + '\n'
+  var PKinfo = Buffer.concat([sigAlgorithm, keyGen.keyID, keyGen.publicKey]).toString('base64') + '\n'
 
   var SKoutputBuffer = Buffer.from(SKfullComment + SKinfo)
   var PKoutputBuffer = Buffer.from(PKfullComment + PKinfo)
 
   return {
-    publicKey,
-    sigAlgorithm,
-    keyID,
-    SKinfo,
     PKoutputBuffer,
     SKoutputBuffer
   }
@@ -278,5 +295,6 @@ module.exports = {
   extractSecretKey: extractSecretKey,
   signContent: signContent,
   verifySignature: verifySignature,
-  keypairGen: keypairGen
+  keypairGen: keypairGen,
+  formatKeys: formatKeys
 }

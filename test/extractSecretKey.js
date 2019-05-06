@@ -75,7 +75,7 @@ test('using too small kdfOpsLimit', function (t) {
 
 test('using too small kdfMemLimit', function (t) {
   var noString = ''
-  fs.readFile('./fixtures/noString.key', function (err, SK) {
+  fs.readFile('/Users/christophediederichs/Documents/Hyperdivision/minisign/test/fixtures/noString.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     SKinfo.kdfMemLimit--
@@ -110,7 +110,8 @@ test('wrong kdfSalt', function (t) {
 })
 
 test('keypairGen output', function (t) {
-  var key = minisign.keypairGen('')
+  var keyGen = minisign.keypairGen('')
+  var key = minisign.formatKeys(keyGen)
 
   var PKiD = minisign.parsePubKey(key.PKoutputBuffer).keyID
   var SKinfo = minisign.parseSecretKey(key.SKoutputBuffer)
