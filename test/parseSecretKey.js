@@ -60,7 +60,7 @@ test('line breaks within key', function (t) {
   })
 })
 
-test('line break at the end of key', function (t) {
+test.only('line break at the end of key', function (t) {
   fs.readFile('./fixtures/lineBreakEnd.key', function (err, data) {
     t.error(err)
     t.throws(() => minisign.parseSecretKey(data), '[ERR_ASSERTION]')
