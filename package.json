@@ -1,12 +1,12 @@
 {
+  "name": "minisign",
+  "version": "0.0.0",
+  "description": "JavaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://jedisct1.github.io/minisign/).",
+  "main": "minisign.js",
   "dependencies": {
-    "buffer-reverse": "^1.0.1",
     "buffer-xor": "^2.0.2",
     "sodium-native": "^2.4.2"
   },
-  "name": "minisign",
-  "version": "1.0.0",
-  "main": "index.js",
   "devDependencies": {
     "standard": "^12.0.1",
     "tape": "^4.10.1"
@@ -19,11 +19,11 @@
     "type": "git",
     "url": "git+https://github.com/chm-diederichs/minisign.git"
   },
-  "author": "",
+  "keywords": ["minisign", "signify"],
+  "author": "Christophe Diederichs <chris.d.itunes@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/chm-diederichs/minisign/issues"
   },
   "homepage": "https://github.com/chm-diederichs/minisign#readme",
-  "description": "JavaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://jedisct1.github.io/minisign/)."
 }

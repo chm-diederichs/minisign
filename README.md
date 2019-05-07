@@ -1,12 +1,13 @@
-# Minisign javaScript Tool
+# `minisign`
 
 [![Build Status](https://travis-ci.org/chm-diederichs/minisign.svg?branch=master)](https://travis-ci.org/chm-diederichs/minisign)
 
-JavaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://jedisct1.github.io/minisign/).
+> JavaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://jedisct1.github.io/minisign/).
 
-`minisignTool.js` contains functions for parsing minisign files (formatting is detailed in minisign documentation).
+`minisign.js` contains functions for parsing minisign files (formatting is detailed in minisign documentation).
 
 ### Usage
+
 ```javascript
 // load secret key
 fs.readFile(secKeyFile, function (err, secretKeyBuffer) {
@@ -35,6 +36,7 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 ```
 
 ### Reading public Key
+
 `parsePubKey(pubKeyFileContent)` takes public key file content as a `buffer` and returns key information as a `dict` of `buffer`s:
 ```javascript
 {
@@ -46,6 +48,7 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 ```
 
 ### Reading signature
+
 `parseSignature(sigFileContent)` takes signature file content as a `buffer` and returns signature information as a `dict` of `buffer`s:
 ```javascript
 {
@@ -59,6 +62,7 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 ```
 
 ### Reading secret key
+
 `parseSecretKey(secKeyFileContent)` takes secret key file content as a `buffer` and returns encrypted key information as a `dict` of `buffer`s:
 ```javascript
 {
@@ -83,6 +87,11 @@ var minsignOutput = signContent(content, 'untrusted comment', SKinfo, 'trusted c
 ```
 
 ### Signing content provided as `buffer`
+
 `signContent(content, comment, secretKeyDetails, trustComment)` takes content as `buffer` and both a comment (unsigned) and trusted comment (signed) as `string`s and secret key details directly from `extractSecretKey` and creates a `string` in minisign format and returns the `buffer` of this string.
 
 ### Verifying signature
+
+## License
+
+[ISC](LICENSE)
