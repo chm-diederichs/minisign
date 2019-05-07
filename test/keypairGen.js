@@ -67,3 +67,37 @@ test('key generation with emoji password', function (t) {
     t.end()
   })
 })
+
+test.only('keypairGen with only one comment', function (t) {
+  const untrustedPrelude = Buffer.from('untrusted comment: ')
+  var startIndex = untrustedPrelude.byteLength
+  var comment1 = Buffer.from('this will appear in both keys')
+  var comment2 = Buffer.from('as should this.')
+  var endIndex1 = comment1.byteLength + startIndex
+  var endIndex2 = comment2.byteLength + startIndex
+
+  var opts1 = {
+    PKcomment: comment1.toString()
+  }
+  var opts2 = {
+    SKcomment: comment2.toString()
+  }
+
+  var keyGenOpts1 = minisign.keypairGen('', opts1)
+  var keyOpts1 = minisign.formatKeys(keyGenOpts1)
+  var PKopts1 = keyOpts1.PKoutputBuffer
+  var SKopts1 = keyOpts1.SKoutputBuffer
+
+  var keyGenOpts2 = minisign.keypairGen('', opts2)
+  var keyOpts2 = minisign.formatKeys(keyGenOpts2)
+  var PKopts2 = keyOpts2.PKoutputBuffer
+  var SKopts2 = keyOpts2.SKoutputBuffer
+
+  t.equal(keyOpts1.PKcomment, keyOpts1.SKcomment)
+  t.equal(keyOpts2.PKcomment, keyOpts2.SKcomment)
+  t.deepEqual(PKopts1.subarray(startIndex, endIndex1), comment1)
+  t.deepEqual(SKopts1.subarray(startIndex, endIndex1), comment1)
+  t.deepEqual(PKopts2.subarray(startIndex, endIndex2), comment2)
+  t.deepEqual(SKopts2.subarray(startIndex, endIndex2), comment2)
+  t.end()
+})
