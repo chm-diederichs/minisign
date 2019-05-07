@@ -24,7 +24,7 @@ test('minisign.js generated key', function (t) {
   var keyGen = minisign.keypairGen('')
   var key = minisign.formatKeys(keyGen)
 
-  var PKinfo = minisign.parsePubKey(key.PKoutputBuffer)
+  var PKinfo = minisign.parsePubKey(key.PK)
   var formatKeyID = PKinfo.keyID.toString('hex').toUpperCase()
 
   t.equals(PKinfo.untrustedComment.toString(), keyGen.PKcomment)

@@ -87,7 +87,7 @@ if (args.V) {
     console.log('cannot output content in quiet mode')
     process.exit(1)
   }
-  if ((args.P  && args.p) || (!args.P && !args.p)) {
+  if ((args.P && args.p) || (!args.P && !args.p)) {
     console.log('must provide unique key')
     process.exit(1)
   }

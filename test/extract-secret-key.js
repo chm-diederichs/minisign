@@ -113,8 +113,8 @@ test('keypairGen output', function (t) {
   var keyGen = minisign.keypairGen('')
   var key = minisign.formatKeys(keyGen)
 
-  var PKiD = minisign.parsePubKey(key.PKoutputBuffer).keyID
-  var SKinfo = minisign.parseSecretKey(key.SKoutputBuffer)
+  var PKiD = minisign.parsePubKey(key.PK).keyID
+  var SKinfo = minisign.parseSecretKey(key.SK)
   var SK = minisign.extractSecretKey('', SKinfo)
 
   t.equal(SK.secretKey.byteLength, sodium.crypto_sign_SECRETKEYBYTES)

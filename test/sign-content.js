@@ -219,8 +219,8 @@ test('sign with keypairGen keys', function (t) {
   var keyGen = minisign.keypairGen('')
   var key = minisign.formatKeys(keyGen)
 
-  var PK = minisign.parsePubKey(key.PKoutputBuffer)
-  var SKinfo = minisign.parseSecretKey(key.SKoutputBuffer)
+  var PK = minisign.parsePubKey(key.PK)
+  var SKinfo = minisign.parseSecretKey(key.SK)
   var SK = minisign.extractSecretKey('', SKinfo)
 
   var toSign = Buffer.from('sign me please.')

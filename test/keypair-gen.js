@@ -9,8 +9,8 @@ test('key generation with empty password', function (t) {
   var noStringPwdKeyInfo = minisign.keypairGen('')
   var noStringPwdKey = minisign.formatKeys(noStringPwdKeyInfo)
 
-  var SKoutput = noStringPwdKey.SKoutputBuffer
-  var PKoutput = noStringPwdKey.PKoutputBuffer
+  var SKoutput = noStringPwdKey.SK
+  var PKoutput = noStringPwdKey.PK
   var PKinfo = Buffer.from(PKoutput.slice(-57, -1).toString(), 'base64')
 
   t.deepEqual(PKoutput.subarray(0, endIndex), untrustedPrelude)
@@ -31,8 +31,8 @@ test('key generation with string password', function (t) {
   var stringPwdKeyInfo = minisign.keypairGen('testing')
   var stringPwdKey = minisign.formatKeys(stringPwdKeyInfo)
 
-  var SKoutput = stringPwdKey.SKoutputBuffer
-  var PKoutput = stringPwdKey.PKoutputBuffer
+  var SKoutput = stringPwdKey.SK
+  var PKoutput = stringPwdKey.PK
   var PKinfo = Buffer.from(PKoutput.slice(-57, -1).toString(), 'base64')
 
   t.deepEqual(PKoutput.subarray(0, endIndex), untrustedPrelude)
@@ -53,8 +53,8 @@ test('key generation with emoji password', function (t) {
   var emojiPwdKeyInfo = minisign.keypairGen('testing👫')
   var emojiPwdKey = minisign.formatKeys(emojiPwdKeyInfo)
 
-  var SKoutput = emojiPwdKey.SKoutputBuffer
-  var PKoutput = emojiPwdKey.PKoutputBuffer
+  var SKoutput = emojiPwdKey.SK
+  var PKoutput = emojiPwdKey.PK
   var PKinfo = Buffer.from(PKoutput.slice(-57, -1).toString(), 'base64')
 
   t.deepEqual(PKoutput.subarray(0, endIndex), untrustedPrelude)
@@ -85,13 +85,13 @@ test('keypairGen with only one comment', function (t) {
 
   var keyGenOpts1 = minisign.keypairGen('', opts1)
   var keyOpts1 = minisign.formatKeys(keyGenOpts1)
-  var PKopts1 = keyOpts1.PKoutputBuffer
-  var SKopts1 = keyOpts1.SKoutputBuffer
+  var PKopts1 = keyOpts1.PK
+  var SKopts1 = keyOpts1.SK
 
   var keyGenOpts2 = minisign.keypairGen('', opts2)
   var keyOpts2 = minisign.formatKeys(keyGenOpts2)
-  var PKopts2 = keyOpts2.PKoutputBuffer
-  var SKopts2 = keyOpts2.SKoutputBuffer
+  var PKopts2 = keyOpts2.PK
+  var SKopts2 = keyOpts2.SK
 
   t.equal(keyOpts1.PKcomment, keyOpts1.SKcomment)
   t.equal(keyOpts2.PKcomment, keyOpts2.SKcomment)
