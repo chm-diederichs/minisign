@@ -1,5 +1,5 @@
 sudo: false # This should make it run faster on travis
 language: node_js
 node_js:
-  - node # latest node version
+#  - node # latest node version
   - lts/* # latest "Long Term Support" version
