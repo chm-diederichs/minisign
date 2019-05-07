@@ -24,7 +24,7 @@ function parsePubKey (pubkeyBuf) {
   const signatureAlgorithm = keyInfo.subarray(0, 2)
   const keyID = keyInfo.subarray(2, 10)
   const publicKey = keyInfo.subarray(10)
-  assert(publicKey.byteLength === (sodium.crypto_sign_PUBLICKEYBYTES))
+  assert(publicKey.byteLength === (sodium.crypto_sign_PUBLICKEYBYTES), 'invalid public key given')
 
   return {
     untrustedComment,
