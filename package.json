@@ -8,6 +8,7 @@
     "sodium-native": "^2.4.2"
   },
   "devDependencies": {
+    "buffer-reverse": "^1.0.1",
     "standard": "^12.0.1",
     "tape": "^4.10.1"
   },
@@ -19,11 +20,17 @@
     "type": "git",
     "url": "git+https://github.com/chm-diederichs/minisign.git"
   },
-  "keywords": ["minisign", "signify"],
+  "keywords": [
+    "minisign",
+    "signify"
+  ],
   "author": "Christophe Diederichs <chris.d.itunes@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/chm-diederichs/minisign/issues"
   },
   "homepage": "https://github.com/chm-diederichs/minisign#readme",
+  "directories": {
+    "test": "test"
+  }
 }
