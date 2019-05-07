@@ -34,7 +34,7 @@ test('minisign.js generated key', function (t) {
 })
 
 test('minisign generated key with comment removed', function (t) {
-  fs.readFile('./test/fixtures/missingComment.pub', function (err, pubkey) {
+  fs.readFile('./test/fixtures/missing-comment.pub', function (err, pubkey) {
     t.error(err)
     t.throws(() => minisign.parsePubKey(pubkey), '[ERR_ASSERTION]')
     t.end()
@@ -42,7 +42,7 @@ test('minisign generated key with comment removed', function (t) {
 })
 
 test('key with long comment', function (t) {
-  fs.readFile('./test/fixtures/longComment.pub', function (err, pubkey) {
+  fs.readFile('./test/fixtures/long-comment.pub', function (err, pubkey) {
     t.error(err)
     var PKinfo = minisign.parsePubKey(pubkey)
 
@@ -52,7 +52,7 @@ test('key with long comment', function (t) {
 })
 
 test('minisign key with one character removed', function (t) {
-  fs.readFile('./test/fixtures/invalidKey.pub', function (err, pubkey) {
+  fs.readFile('./test/fixtures/invalid-key.pub', function (err, pubkey) {
     t.error(err)
     t.throws(() => minisign.parsePubKey(pubkey), '[ERR_ASSERTION]')
     t.end()

@@ -184,10 +184,9 @@ function signContent (content, SKdetails, opts) {
   }
 }
 
-// verify the signature of an arbitrary input buffer
-function verifySignature (signedContent, originalContent, publicKeyInfo) {
+// verify the signature of a parsed input buffer
+function verifySignature (signature, originalContent, publicKeyInfo) {
   var contentSigned
-  var signature = parseSignature(signedContent)
   if (signature.signatureAlgorithm.equals(Buffer.from('ED'))) {
     var hashedContent = Buffer.alloc(sodium.crypto_generichash_BYTES_MAX)
     sodium.crypto_generichash(hashedContent, originalContent)

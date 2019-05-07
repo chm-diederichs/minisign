@@ -5,11 +5,11 @@ var sodium = require('sodium-native')
 
 test('key generated with no password', function (t) {
   var noString = ''
-  fs.readFile('./test/fixtures/noString.key', function (err, SK) {
+  fs.readFile('./test/fixtures/no-string.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey(noString, SKinfo)
-    fs.readFile('./test/fixtures/noString.pub', function (err, PK) {
+    fs.readFile('./test/fixtures/no-string.pub', function (err, PK) {
       t.error(err)
       var publicKeyID = minisign.parsePubKey(PK).keyID
 
@@ -23,11 +23,11 @@ test('key generated with no password', function (t) {
 
 test('key generated with emoji password', function (t) {
   var emojiString = 'testing👫'
-  fs.readFile('./test/fixtures/emojiString.key', function (err, SK) {
+  fs.readFile('./test/fixtures/emoji-string.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey(emojiString, SKinfo)
-    fs.readFile('./test/fixtures/emojiString.pub', function (err, PK) {
+    fs.readFile('./test/fixtures/emoji-string.pub', function (err, PK) {
       t.error(err)
       var publicKeyID = minisign.parsePubKey(PK).keyID
 
@@ -41,14 +41,14 @@ test('key generated with emoji password', function (t) {
 
 // cannot use password this long via minisign in terminal
 test('key generated with long password [180KB]', function (t) {
-  fs.readFile('./test/fixtures/longComment.pub', function (err, data) {
+  fs.readFile('./test/fixtures/long-comment.pub', function (err, data) {
     t.error(err)
     var password = data
-    fs.readFile('./test/fixtures/longPwd.key', function (err, SK) {
+    fs.readFile('./test/fixtures/long-pwd.key', function (err, SK) {
       t.error(err)
       var SKinfo = minisign.parseSecretKey(SK)
       var SKdetails = minisign.extractSecretKey(password, SKinfo)
-      fs.readFile('./test/fixtures/longPwd.pub', function (err, PK) {
+      fs.readFile('./test/fixtures/long-pwd.pub', function (err, PK) {
         t.error(err)
         var publicKeyID = minisign.parsePubKey(PK).keyID
 
@@ -63,7 +63,7 @@ test('key generated with long password [180KB]', function (t) {
 
 test('using too small kdfOpsLimit', function (t) {
   var noString = ''
-  fs.readFile('./test/fixtures/noString.key', function (err, SK) {
+  fs.readFile('./test/fixtures/no-string.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     SKinfo.kdfOpsLimit--
@@ -75,7 +75,7 @@ test('using too small kdfOpsLimit', function (t) {
 
 test('using too small kdfMemLimit', function (t) {
   var noString = ''
-  fs.readFile('./test/fixtures/noString.key', function (err, SK) {
+  fs.readFile('./test/fixtures/no-string.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     SKinfo.kdfMemLimit--
@@ -87,7 +87,7 @@ test('using too small kdfMemLimit', function (t) {
 
 test('invalid input - missing salt', function (t) {
   var noString = ''
-  fs.readFile('./test/fixtures/noString.key', function (err, SK) {
+  fs.readFile('./test/fixtures/no-string.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     delete SKinfo.kdfSalt
@@ -99,7 +99,7 @@ test('invalid input - missing salt', function (t) {
 
 test('wrong kdfSalt', function (t) {
   var noString = ''
-  fs.readFile('./test/fixtures/noString.key', function (err, SK) {
+  fs.readFile('./test/fixtures/no-string.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     SKinfo.kdfSalt++

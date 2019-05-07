@@ -17,7 +17,7 @@ test('MINISIGN signature from file', function (t) {
 })
 
 test('comment line removed', function (t) {
-  fs.readFile('./test/fixtures/noComment.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/no-comment.txt.minisig', function (err, signature) {
     t.error(err)
     t.throws(() => minisign.parseSignature(signature), '[ERR_ASSERTION]')
     t.end()
@@ -25,7 +25,7 @@ test('comment line removed', function (t) {
 })
 
 test('long comment (180KB)', function (t) {
-  fs.readFile('./test/fixtures/longComment.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/long-comment.txt.minisig', function (err, signature) {
     t.error(err)
     var sigInfo = minisign.parseSignature(signature)
 
@@ -38,7 +38,7 @@ test('long comment (180KB)', function (t) {
 })
 
 test('trusted comment line removed', function (t) {
-  fs.readFile('./test/fixtures/noTrustedComment.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/no-trusted-comment.txt.minisig', function (err, signature) {
     t.error(err)
     t.throws(() => minisign.parseSignature(signature), '[ERR_ASSERTION]')
     t.end()
@@ -46,7 +46,7 @@ test('trusted comment line removed', function (t) {
 })
 
 test('long trusted comment (164KB)', function (t) {
-  fs.readFile('./test/fixtures/longTrustedComment.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/long-trusted-comment.txt.minisig', function (err, signature) {
     t.error(err)
     var sigInfo = minisign.parseSignature(signature)
 
@@ -59,7 +59,7 @@ test('long trusted comment (164KB)', function (t) {
 })
 
 test('pre hashed content', function (t) {
-  fs.readFile('./test/fixtures/preHashed.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/pre-hashed.txt.minisig', function (err, signature) {
     t.error(err)
     var sigInfo = minisign.parseSignature(signature)
 
@@ -72,11 +72,11 @@ test('pre hashed content', function (t) {
 })
 
 test('no line breaks', function (t) {
-  fs.readFile('./test/fixtures/noLineBreaks.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/no-line-breaks.txt.minisig', function (err, signature) {
     t.error(err)
     t.throws(() => minisign.parseSignature(signature), '[ERR_ASSERTION]')
   })
-  fs.readFile('./test/fixtures/missingLineBreak.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/missing-line-break.txt.minisig', function (err, signature) {
     t.error(err)
     t.throws(() => minisign.parseSignature(signature), '[ERR_ASSERTION]')
     t.end()
@@ -84,15 +84,15 @@ test('no line breaks', function (t) {
 })
 
 test('extra line break', function (t) {
-  fs.readFile('./test/fixtures/extraLineBreak1.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/extra-line-break1.txt.minisig', function (err, signature) {
     t.error(err)
     t.throws(() => minisign.parseSignature(signature), '[ERR_ASSERTION]')
   })
-  fs.readFile('./test/fixtures/extraLineBreak2.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/extra-line-break2.txt.minisig', function (err, signature) {
     t.error(err)
     t.throws(() => minisign.parseSignature(signature), '[ERR_ASSERTION]')
   })
-  fs.readFile('./test/fixtures/extraLineBreak3.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/extra-line-break3.txt.minisig', function (err, signature) {
     t.error(err)
     t.throws(() => minisign.parseSignature(signature), '[ERR_ASSERTION]')
     t.end()
@@ -100,7 +100,7 @@ test('extra line break', function (t) {
 })
 
 test('MINISIGN signature using minisign.js key', function (t) {
-  fs.readFile('./test/fixtures/keypairGen.txt.minisig', function (err, signature) {
+  fs.readFile('./test/fixtures/keypair-gen.txt.minisig', function (err, signature) {
     t.error(err)
     var sigInfo = minisign.parseSignature(signature)
 
