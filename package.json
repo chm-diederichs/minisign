@@ -25,5 +25,5 @@
     "url": "https://github.com/chm-diederichs/minisign/issues"
   },
   "homepage": "https://github.com/chm-diederichs/minisign#readme",
-  "description": "javaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://jedisct1.github.io/minisign/)."
+  "description": "JavaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://jedisct1.github.io/minisign/)."
 }

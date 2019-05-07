@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/chm-diederichs/minisign.svg?branch=master)](https://travis-ci.org/chm-diederichs/minisign)
 
-javaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://jedisct1.github.io/minisign/).
+JavaScript implementation of Frank Denis' (@jedisct1) [minisign tool](https://jedisct1.github.io/minisign/).
 
 `minisignTool.js` contains functions for parsing minisign files (formatting is detailed in minisign documentation).
 
