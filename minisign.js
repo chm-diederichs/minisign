@@ -34,6 +34,21 @@ function parsePubKey (pubkeyBuf) {
   }
 }
 
+function parseKeyCLI (pubKeyString) {
+  const keyInfo = Buffer.from(pubKeyString, 'base64')
+
+  const signatureAlgorithm = keyInfo.subarray(0, 2)
+  const keyID = keyInfo.subarray(2, 10)
+  const publicKey = keyInfo.subarray(10)
+  assert(publicKey.byteLength === (sodium.crypto_sign_PUBLICKEYBYTES), 'invalid public key given')
+
+  return {
+    signatureAlgorithm,
+    keyID,
+    publicKey
+  }
+}
+
 // totest: signatureBuf ->
 // takes signature buffer and returns info as buffers
 function parseSignature (signatureBuf) {
@@ -108,23 +123,23 @@ function parseSecretKey (secretKeyBuf) {
 }
 
 // takes output from parseSecretKey() and decrypts secret key
-function extractSecretKey (pwd, SKinfo) {
+function extractSecretKey (pwd, parsedSK) {
   var kdfOutput = Buffer.alloc(104)
   var keynumInfo
   var sumCheck = Buffer.alloc(sodium.crypto_generichash_BYTES)
-  var opsLimit = SKinfo.kdfOpsLimit
-  var memLimit = SKinfo.kdfMemLimit
-  var salt = SKinfo.kdfSalt
+  var opsLimit = parsedSK.kdfOpsLimit
+  var memLimit = parsedSK.kdfMemLimit
+  var salt = parsedSK.kdfSalt
   var password = Buffer.from(pwd)
 
   sodium.crypto_pwhash_scryptsalsa208sha256(kdfOutput, password, salt, opsLimit, memLimit)
-  keynumInfo = xor(kdfOutput, SKinfo.keynumSK)
+  keynumInfo = xor(kdfOutput, parsedSK.keynumSK)
   const keyID = keynumInfo.subarray(0, 8)
   const secretKey = keynumInfo.subarray(8, 72)
   const checkSum = keynumInfo.subarray(72)
-  const signatureAlgorithm = SKinfo.signatureAlgorithm.toString()
+  const signatureAlgorithm = parsedSK.signatureAlgorithm.toString()
 
-  var sumCheckData = Buffer.concat([SKinfo.signatureAlgorithm, keyID, secretKey])
+  var sumCheckData = Buffer.concat([parsedSK.signatureAlgorithm, keyID, secretKey])
   sodium.crypto_generichash(sumCheck, sumCheckData)
 
   assert(sumCheck.equals(checkSum))
@@ -278,12 +293,12 @@ function formatKeys (keyGen) {
   var SKinfo = Buffer.concat([SKalgorithmInfo, kdfSalt, kdfLimits, keynumSK]).toString('base64') + '\n'
   var PKinfo = Buffer.concat([sigAlgorithm, keyGen.keyID, keyGen.publicKey]).toString('base64') + '\n'
 
-  var SKoutputBuffer = Buffer.from(SKfullComment + SKinfo)
-  var PKoutputBuffer = Buffer.from(PKfullComment + PKinfo)
+  var SK = Buffer.from(SKfullComment + SKinfo)
+  var PK = Buffer.from(PKfullComment + PKinfo)
 
   return {
-    PKoutputBuffer,
-    SKoutputBuffer
+    PK,
+    SK
   }
 }
 
@@ -295,5 +310,6 @@ module.exports = {
   signContent: signContent,
   verifySignature: verifySignature,
   keypairGen: keypairGen,
-  formatKeys: formatKeys
+  formatKeys: formatKeys,
+  parseKeyCLI: parseKeyCLI
 }
