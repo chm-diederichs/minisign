@@ -1,13 +1,17 @@
+#!/usr/bin/env node
+
 var path = require('path')
 var fs = require('fs')
+var os = require('os')
 var minisign = require('./minisign')
+var pkg = require('./package.json')
 const cwd = process.cwd()
 const minimist = require('minimist')
 
 var args = minimist(process.argv.slice(2), {
   string: ['m', 'x', 's', 'p', 'P', 'c', 't', 'k'],
-  boolean: ['G', 'V', 'S', 'F', 'H', 'f', 'q', 'o', 'Q', 'help'],
-  alias: { h: 'help' },
+  boolean: ['G', 'V', 'S', 'F', 'H', 'f', 'q', 'o', 'Q', 'help', 'version'],
+  alias: { h: 'help', v: 'version' },
   unknown: function () {
     console.log('unrecognised command.')
     process.exit(1)
@@ -35,6 +39,7 @@ const usage = `
   -q                quiet mode, suppress output
   -Q                pretty quiet mode, only print the trusted comment - overrides quiet mode
   -f                force. Combined with -G, overwrite a previous key pair
+  -v                display version number
 `
 
 function verify (signature, sourceFile, PKinfo, output, quiet, pretty) {
@@ -79,15 +84,19 @@ function sign (content, SKfile, sigFile, pwd, opts) {
 
 if (args.help) {
   console.log(usage)
-  process.exit(0)
+  process.exit()
+}
+if (args.version) {
+  console.log(pkg.version)
+  process.exit()
 }
 
 // initiales fs variables
 var sourceFile
 var sigFile
 
-var SKfile = path.join(process.env.HOME, 'minisign.key')
-var PKfile = path.join(process.env.HOME, 'minisign.pub')
+var SKfile = path.join(os.homedir(), '.minisign/minisign.key')
+var PKfile = path.join(os.homedir(), '.minisign/minisign.pub')
 
 var tPrelude = 'trusted comment: '
 
