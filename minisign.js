@@ -1,7 +1,3 @@
-// issues:
-// what is purpose of signature algorithm in key generation?
-// make assertion errors more specific
-
 const assert = require('assert')
 const sodium = require('sodium-native')
 const xor = require('buffer-xor')
@@ -12,6 +8,7 @@ const untrustedPrelude = Buffer.from('untrusted comment: ')
 const trustedPrelude = Buffer.from('trusted comment: ')
 const untrustedCommentStart = untrustedPrelude.byteLength
 
+// parse public key data saved to file in minisign format
 function parsePubKey (pubkeyBuf) {
   assert(untrustedPrelude.equals(pubkeyBuf.subarray(0, untrustedCommentStart)))
   const untrustedCommentEnd = pubkeyBuf.indexOf('\n', untrustedCommentStart)
@@ -34,6 +31,7 @@ function parsePubKey (pubkeyBuf) {
   }
 }
 
+// parse key directly from command line
 function parseKeyCLI (pubKeyString) {
   const keyInfo = Buffer.from(pubKeyString, 'base64')
 
@@ -49,7 +47,6 @@ function parseKeyCLI (pubKeyString) {
   }
 }
 
-// totest: signatureBuf ->
 // takes signature buffer and returns info as buffers
 function parseSignature (signatureBuf) {
   assert(untrustedPrelude.equals(signatureBuf.subarray(0, untrustedCommentStart)))
@@ -277,6 +274,7 @@ function keypairGen (pwd, opts) {
   }
 }
 
+// format keys to be saved to file in minisign compatible format
 function formatKeys (keyGen) {
   var sigAlgorithm = keyGen.sigAlgorithm
   var kdfAlgorithm = keyGen.kdfAlgorithm
