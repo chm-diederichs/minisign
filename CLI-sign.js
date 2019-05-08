@@ -1,25 +1,52 @@
 var path = require('path')
 var fs = require('fs')
 var minisign = require('./minisign')
-const args = require('minimist')(process.argv.slice(2))
 const cwd = process.cwd()
+const minimist = require('minimist')
 
-var sourceFile
-var sigFile
+var args = minimist(process.argv.slice(2), {
+  string: ['m', 'x', 's', 'p', 'P', 'c', 't', 'k'],
+  boolean: ['G', 'V', 'S', 'F', 'H', 'f', 'q', 'o', 'Q', 'help'],
+  alias: { h: 'help' },
+  unknown: function () {
+    console.log('unrecognised command.')
+    process.exit(1)
+  }
+})
 
-var SKfile = path.join(process.env.HOME, 'minisign.key')
-var PKfile = path.join(process.env.HOME, 'minisign.pub')
+const usage = `
+  Usage:
+  $ node CLI-sign -G [-F] [-p pubkey file] [-s seckey file] -k pwd
+  $ node CLI-sign -S [-H] [-s seckey file] [-x signature file] [-c comment] [-t trusted comment] -k pwd -m file
+  $ node ClI-sign -V [-x signature file] [-p pubkey file | -P public key] [-o] [-q] -m file
 
-var tPrelude = 'trusted comment: '
+  -G                generate a new key pair
+  -S                sign a file
+  -V                verify that a signature is valid for a given file
+  -m <file>         file to sign/verify
+  -o                combined with -V, output the file content after verification
+  -H                combined with -S, pre-hash in order to sign large files
+  -p <pubkeyfile>   public key file (default: ./minisign.pub)
+  -P <pubkey>       public key, as a base64 string
+  -s <seckey>       secret key file (default: ~/.minisign/minisign.key)
+  -x <sigfile>      signature file (default: <file>.minisig)
+  -c <comment>      add a one-line untrusted comment
+  -t <comment>      add a one-line trusted comment
+  -q                quiet mode, suppress output
+  -Q                pretty quiet mode, only print the trusted comment - overrides quiet mode
+  -f                force. Combined with -G, overwrite a previous key pair
+`
 
-function verify (signature, sourceFile, PKinfo, output, quiet) {
+function verify (signature, sourceFile, PKinfo, output, quiet, pretty) {
   fs.readFile(sourceFile, function (err, message) {
     if (err) throw err
     var sigInfo = minisign.parseSignature(signature)
     if (minisign.verifySignature(sigInfo, message, PKinfo)) {
-      if (!quiet) {
+      if (!quiet && !pretty) {
         console.log('comment and signature verified.')
         console.log(tPrelude + sigInfo.trustedComment)
+      } else if (pretty) {
+        console.log(sigInfo.trustedComment.toString())
       }
       if (output) {
         console.log(message.toString())
@@ -50,6 +77,20 @@ function sign (content, SKfile, sigFile, pwd, opts) {
   })
 }
 
+if (args.help) {
+  console.log(usage)
+  process.exit(0)
+}
+
+// initiales fs variables
+var sourceFile
+var sigFile
+
+var SKfile = path.join(process.env.HOME, 'minisign.key')
+var PKfile = path.join(process.env.HOME, 'minisign.pub')
+
+var tPrelude = 'trusted comment: '
+
 // generate keypair
 if (args.G) {
   if (!args.k) {
@@ -59,6 +100,7 @@ if (args.G) {
 
   var newKeys = minisign.keypairGen(args.k)
   var keys = minisign.formatKeys(newKeys)
+  var overwrite = { flag: 'wx' }
 
   if (args.p) {
     PKfile = path.resolve(cwd, args.p)
@@ -66,15 +108,24 @@ if (args.G) {
   if (args.s) {
     SKfile = path.resolve(cwd, args.s)
   }
+  if (args.F) {
+    overwrite.flag = 'w'
+  }
 
-  fs.writeFile(PKfile, keys.PK.toString(), function (err) {
-    if (err) throw err
+  fs.writeFile(PKfile, keys.PK.toString(), overwrite, function (err) {
+    if (err && err.code === 'EEXIST') {
+      console.log('keys already exist, use -F tag to force overwrite')
+      process.exit(1)
+    }
+    fs.writeFile(SKfile, keys.SK.toString(), overwrite, function (err) {
+      if (err && err.code === 'EEXIST') {
+        console.log('keys already exist, use -F tag to force overwrite')
+        process.exit(1)
+      }
+    })
+    console.log('public key save to ', PKfile)
+    console.log('secret key encrypted and saved to ', SKfile)
   })
-  fs.writeFile(SKfile, keys.SK.toString(), function (err) {
-    if (err) throw err
-  })
-  console.log('public key save to ', PKfile)
-  console.log('secret key encrypted and saved to ', SKfile)
 }
 
 // verifying a signature
@@ -83,7 +134,7 @@ if (args.V) {
     console.log('specify file to be verified')
     process.exit(1)
   }
-  if (args.o && args.q) {
+  if (args.o && (args.q || args.Q)) {
     console.log('cannot output content in quiet mode')
     process.exit(1)
   }
@@ -109,12 +160,12 @@ if (args.V) {
     if (err) throw err
     if (args.P) {
       var PKinfo = minisign.parseKeyCLI(args.P)
-      verify(signature, sourceFile, PKinfo, args.o, args.q)
+      verify(signature, sourceFile, PKinfo, args.o, args.q, args.Q)
     } else {
       fs.readFile(PKfile, function (err, PK) {
         if (err) throw err
         var PKinfo = minisign.parsePubKey(PK)
-        verify(signature, sourceFile, PKinfo, args.o, args.q)
+        verify(signature, sourceFile, PKinfo, args.o, args.q, args.Q)
       })
     }
   })
