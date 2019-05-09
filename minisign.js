@@ -2,8 +2,7 @@ const assert = require('assert')
 const sodium = require('sodium-native')
 const xor = require('buffer-xor')
 
-var defaultComment = 'signature from minisign secret key'
-
+const defaultComment = 'signature from minisign secret key'
 const untrustedPrelude = Buffer.from('untrusted comment: ')
 const trustedPrelude = Buffer.from('trusted comment: ')
 const untrustedCommentStart = untrustedPrelude.byteLength
@@ -127,18 +126,23 @@ function extractSecretKey (pwd, parsedSK) {
   var opsLimit = parsedSK.kdfOpsLimit
   var memLimit = parsedSK.kdfMemLimit
   var salt = parsedSK.kdfSalt
-  var password = Buffer.from(pwd)
 
-  sodium.crypto_pwhash_scryptsalsa208sha256(kdfOutput, password, salt, opsLimit, memLimit)
+  sodium.sodium_mprotect_readwrite(pwd)
+  sodium.crypto_pwhash_scryptsalsa208sha256(kdfOutput, pwd, salt, opsLimit, memLimit)
+  sodium.sodium_memzero(pwd)
+  sodium.sodium_mprotect_noaccess(pwd)
+
+  const secretKey = sodium.sodium_malloc(sodium.crypto_sign_SECRETKEYBYTES)
   keynumInfo = xor(kdfOutput, parsedSK.keynumSK)
   const keyID = keynumInfo.subarray(0, 8)
-  const secretKey = keynumInfo.subarray(8, 72)
+  secretKey.fill(keynumInfo.subarray(8, 72))
   const checkSum = keynumInfo.subarray(72)
   const signatureAlgorithm = parsedSK.signatureAlgorithm.toString()
 
   var sumCheckData = Buffer.concat([parsedSK.signatureAlgorithm, keyID, secretKey])
-  sodium.crypto_generichash(sumCheck, sumCheckData)
+  sodium.sodium_mprotect_noaccess(secretKey)
 
+  sodium.crypto_generichash(sumCheck, sumCheckData)
   assert(sumCheck.equals(checkSum))
 
   return {
@@ -174,6 +178,7 @@ function signContent (content, SKdetails, opts) {
   var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
   var globalSignature = Buffer.alloc(sodium.crypto_sign_BYTES)
 
+  sodium.sodium_mprotect_readwrite(SKdetails.secretKey)
   sodium.crypto_sign_detached(signature, contentToSign, SKdetails.secretKey)
 
   var signatureInfo = Buffer.concat([signatureAlgorithm, SKdetails.keyID, signature])
@@ -183,6 +188,9 @@ function signContent (content, SKdetails, opts) {
 
   var forGlobalSig = Buffer.concat([signature, Buffer.from(tComment)])
   sodium.crypto_sign_detached(globalSignature, forGlobalSig, SKdetails.secretKey)
+  sodium.sodium_memzero(SKdetails.secretKey)
+  sodium.sodium_mprotect_noaccess(SKdetails.secretKey)
+
   var globalSigBase64 = Buffer.from(globalSignature.toString('base64') + '\n')
 
   var outputBuf = Buffer.concat([untrustedComment, sigInfoBase64, trustedComment, globalSigBase64])
@@ -231,8 +239,8 @@ function keypairGen (pwd, opts) {
   var SKdComment = 'minisign encrypted secret key'
 
   if (opts == null) opts = {}
-  var PKcomment = opts.PKcomment || opts.SKcomment || PKdComment
-  var SKcomment = opts.SKcomment || opts.PKcomment || SKdComment
+  var PKcomment = opts.PKcomment || PKdComment
+  var SKcomment = opts.SKcomment || SKdComment
   var sigAlgorithm = Buffer.from(opts.sigAlgorithm || 'Ed')
   var kdfAlgorithm = Buffer.from(opts.kdfAlgorithm || 'Sc')
   var cksumAlgorithm = Buffer.from(opts.cksumAlgorithm || 'B2')
@@ -257,7 +265,10 @@ function keypairGen (pwd, opts) {
   sodium.crypto_generichash(checkSum, checkSumData)
 
   var keynumData = Buffer.concat([keyID, secretKey, checkSum])
-  sodium.crypto_pwhash_scryptsalsa208sha256(kdfOutput, Buffer.from(pwd), kdfSalt, kdfOpsLimit, kdfMemLimit)
+  sodium.sodium_mprotect_readwrite(pwd)
+  sodium.crypto_pwhash_scryptsalsa208sha256(kdfOutput, pwd, kdfSalt, kdfOpsLimit, kdfMemLimit)
+  sodium.sodium_memzero(pwd)
+  sodium.sodium_mprotect_noaccess(pwd)
   var keynumSK = xor(kdfOutput, keynumData)
 
   return {

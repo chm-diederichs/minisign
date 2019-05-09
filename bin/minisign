@@ -3,8 +3,9 @@
 var path = require('path')
 var fs = require('fs')
 var os = require('os')
-var minisign = require('./minisign')
-var pkg = require('./package.json')
+var minisign = require('..')
+var pkg = require('../package.json')
+var sodium = require('sodium-native')
 const cwd = process.cwd()
 const minimist = require('minimist')
 
@@ -34,14 +35,15 @@ const usage = `
   -P <pubkey>       public key, as a base64 string
   -s <seckey>       secret key file (default: ~/.minisign/minisign.key)
   -x <sigfile>      signature file (default: <file>.minisig)
-  -c <comment>      add a one-line untrusted comment
-  -t <comment>      add a one-line trusted comment
+  -c <comment>      add a one-line untrusted comment / comment for public key
+  -t <comment>      add a one-line trusted comment / comment for secret key
   -q                quiet mode, suppress output
   -Q                pretty quiet mode, only print the trusted comment - overrides quiet mode
   -f                force. Combined with -G, overwrite a previous key pair
   -v                display version number
 `
 
+// function to verify given signature
 function verify (signature, sourceFile, PKinfo, output, quiet, pretty) {
   fs.readFile(sourceFile, function (err, message) {
     if (err) throw err
@@ -66,19 +68,56 @@ function verify (signature, sourceFile, PKinfo, output, quiet, pretty) {
   })
 }
 
-function sign (content, SKfile, sigFile, pwd, opts) {
-  fs.readFile(SKfile, function (err, SK) {
+// function to sign a given file
+function sign (opts, pwd) {
+  fs.readFile(opts.sourceFile, function (err, message) {
     if (err) throw err
-    var parsedSK = minisign.parseSecretKey(SK)
-    var SKinfo = minisign.extractSecretKey(pwd, parsedSK)
-    var signedOutput = minisign.signContent(content, SKinfo, opts)
-    var toFile = signedOutput.outputBuf.toString()
-
-    fs.writeFile(sigFile, toFile, function (err) {
+    fs.readFile(opts.SKfile, function (err, SK) {
       if (err) throw err
-      console.log('signature saved to ', sigFile)
-      process.exit()
+      var parsedSK = minisign.parseSecretKey(SK)
+      var SKinfo = minisign.extractSecretKey(pwd, parsedSK)
+
+      var signedOutput = minisign.signContent(message, SKinfo, opts)
+      var stringOutput = signedOutput.outputBuf.toString()
+
+      fs.writeFile(opts.sigFile, stringOutput, function (err) {
+        if (err) throw err
+        console.log('signature saved to ', opts.sigFile)
+        process.exit()
+      })
     })
+  })
+}
+
+// callback to generate keypairs with password
+function generate (opts, pwd) {
+  var newKeys = minisign.keypairGen(pwd, opts)
+  var keys = minisign.formatKeys(newKeys)
+
+  fs.writeFile(opts.PKfile, keys.PK.toString(), opts.overwrite, (err) => {
+    if (err && err.code === 'EEXIST') {
+      console.log('keys already exist, use -F tag to force overwrite')
+      process.exit(1)
+    }
+    fs.writeFile(opts.SKfile, keys.SK.toString(), opts.overwrite, (err) => {
+      if (err && err.code === 'EEXIST') {
+        console.log('keys already exist, use -F tag to force overwrite')
+        process.exit(1)
+      }
+    })
+    console.log('public key save to ', opts.PKfile)
+    console.log('secret key encrypted and saved to ', opts.SKfile)
+  })
+}
+
+// function to accept password from user
+function secureRead (buf, args, cb) {
+  process.stdout.write('password: ')
+  fs.read(0, buf, 0, buf.byteLength, null, (err, bytesRead, buf) => {
+    if (err) throw err
+    buf = buf.subarray(0, bytesRead - 1)
+    sodium.sodium_mprotect_noaccess(buf)
+    cb(args, buf)
   })
 }
 
@@ -91,50 +130,66 @@ if (args.version) {
   process.exit()
 }
 
+var passwordBuf = sodium.sodium_malloc(4096)
+
 // initiales fs variables
 var sourceFile
 var sigFile
+var opts = {}
 
 var SKfile = path.join(os.homedir(), '.minisign/minisign.key')
 var PKfile = path.join(os.homedir(), '.minisign/minisign.pub')
 
 var tPrelude = 'trusted comment: '
 
-// generate keypair
+// generate keypair and save to files
 if (args.G) {
-  if (!args.k) {
-    console.log('must provide a password')
+  opts = { overwrite: { flag: 'wx' } }
+
+  opts.SKfile = SKfile
+  opts.PKfile = PKfile
+  opts.PKcomment = args.c
+  opts.SKcomment = args.t
+
+  if (args.p) {
+    opts.PKfile = path.resolve(cwd, args.p)
+  }
+  if (args.s) {
+    opts.SKfile = path.resolve(cwd, args.s)
+  }
+  if (args.F) {
+    opts.overwrite = { flag: 'w' }
+  }
+
+  secureRead(passwordBuf, opts, generate)
+}
+
+// signing a file
+if (args.S) {
+  opts.sourceFile = path.normalize(args.m)
+  opts.sigFile = `${sourceFile}.minisig`
+  opts.SKfile = SKfile
+  opts.PKfile = PKfile
+
+  opts.comment = args.c
+  opts.tComment = args.t
+
+  if (args.s) {
+    opts.SKfile = path.resolve(cwd, args.s)
+  }
+  if (args.x) {
+    opts.sigFile = path.resolve(cwd, args.x)
+  }
+  if (args.H) {
+    opts.sigAlgorithm = 'ED'
+  }
+
+  if (!args.m) {
+    console.log('specify file to be verified')
     process.exit(1)
   }
 
-  var newKeys = minisign.keypairGen(args.k)
-  var keys = minisign.formatKeys(newKeys)
-  var overwrite = { flag: 'wx' }
-
-  if (args.p) {
-    PKfile = path.resolve(cwd, args.p)
-  }
-  if (args.s) {
-    SKfile = path.resolve(cwd, args.s)
-  }
-  if (args.F) {
-    overwrite.flag = 'w'
-  }
-
-  fs.writeFile(PKfile, keys.PK.toString(), overwrite, function (err) {
-    if (err && err.code === 'EEXIST') {
-      console.log('keys already exist, use -F tag to force overwrite')
-      process.exit(1)
-    }
-    fs.writeFile(SKfile, keys.SK.toString(), overwrite, function (err) {
-      if (err && err.code === 'EEXIST') {
-        console.log('keys already exist, use -F tag to force overwrite')
-        process.exit(1)
-      }
-    })
-    console.log('public key save to ', PKfile)
-    console.log('secret key encrypted and saved to ', SKfile)
-  })
+  secureRead(passwordBuf, opts, sign)
 }
 
 // verifying a signature
@@ -177,39 +232,5 @@ if (args.V) {
         verify(signature, sourceFile, PKinfo, args.o, args.q, args.Q)
       })
     }
-  })
-}
-
-// signing a file
-if (args.S) {
-  if (!args.m) {
-    console.log('specify file to be verified')
-    process.exit(1)
-  }
-  if (!args.k) {
-    console.log('password required')
-    process.exit(1)
-  }
-
-  sourceFile = path.normalize(args.m)
-  sigFile = `${sourceFile}.minisig`
-
-  var opts = {}
-  opts.comment = args.c
-  opts.tComment = args.t
-
-  if (args.s) {
-    SKfile = path.resolve(cwd, args.s)
-  }
-  if (args.x) {
-    sigFile = path.resolve(cwd, args.x)
-  }
-  if (args.H) {
-    opts.sigAlgorithm = 'ED'
-  }
-
-  fs.readFile(sourceFile, function (err, message) {
-    if (err) throw err
-    sign(message, SKfile, sigFile, args.k, opts)
   })
 }
