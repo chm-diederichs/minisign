@@ -111,10 +111,15 @@ test('signContent generated input', function (t) {
   var toSign = Buffer.alloc(200)
   sodium.randombytes_buf(toSign)
 
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
+
   fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
+
     var SKinfo = minisign.parseSecretKey(SK)
-    var SKdetails = minisign.extractSecretKey('', SKinfo)
+    var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
 
     var signedOutput = minisign.signContent(toSign, SKdetails).outputBuf
     var parsedOutput = minisign.parseSignature(signedOutput)

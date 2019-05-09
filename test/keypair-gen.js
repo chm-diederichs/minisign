@@ -1,12 +1,17 @@
 var test = require('tape')
 var minisign = require('../minisign')
 var fs = require('fs')
+var sodium = require('sodium-native')
 
 test('key generation with empty password', function (t) {
   const untrustedPrelude = Buffer.from('untrusted comment: ')
   var endIndex = untrustedPrelude.byteLength
 
-  var noStringPwdKeyInfo = minisign.keypairGen('')
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
+
+  var noStringPwdKeyInfo = minisign.keypairGen(pwd)
   var noStringPwdKey = minisign.formatKeys(noStringPwdKeyInfo)
 
   var SKoutput = noStringPwdKey.SK
@@ -28,7 +33,11 @@ test('key generation with string password', function (t) {
   const untrustedPrelude = Buffer.from('untrusted comment: ')
   var endIndex = untrustedPrelude.byteLength
 
-  var stringPwdKeyInfo = minisign.keypairGen('testing')
+  var stringBuf = Buffer.from('testing')
+  var pwd = sodium.sodium_malloc(stringBuf.byteLength)
+  pwd.fill(stringBuf)
+
+  var stringPwdKeyInfo = minisign.keypairGen(pwd)
   var stringPwdKey = minisign.formatKeys(stringPwdKeyInfo)
 
   var SKoutput = stringPwdKey.SK
@@ -50,7 +59,11 @@ test('key generation with emoji password', function (t) {
   const untrustedPrelude = Buffer.from('untrusted comment: ')
   var endIndex = untrustedPrelude.byteLength
 
-  var emojiPwdKeyInfo = minisign.keypairGen('testing👫')
+  var emojiBuf = Buffer.from('testing👫')
+  var pwd = sodium.sodium_malloc(emojiBuf.byteLength)
+  pwd.fill(emojiBuf)
+
+  var emojiPwdKeyInfo = minisign.keypairGen(pwd)
   var emojiPwdKey = minisign.formatKeys(emojiPwdKeyInfo)
 
   var SKoutput = emojiPwdKey.SK
@@ -71,10 +84,14 @@ test('key generation with emoji password', function (t) {
 test('keypairGen with only one comment', function (t) {
   const untrustedPrelude = Buffer.from('untrusted comment: ')
   var startIndex = untrustedPrelude.byteLength
-  var comment1 = Buffer.from('this will appear in both keys')
-  var comment2 = Buffer.from('as should this.')
+  var comment1 = Buffer.from('this will appear in public key,')
+  var comment2 = Buffer.from('but this appears in secret key.')
   var endIndex1 = comment1.byteLength + startIndex
   var endIndex2 = comment2.byteLength + startIndex
+
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
 
   var opts1 = {
     PKcomment: comment1.toString()
@@ -83,21 +100,15 @@ test('keypairGen with only one comment', function (t) {
     SKcomment: comment2.toString()
   }
 
-  var keyGenOpts1 = minisign.keypairGen('', opts1)
+  var keyGenOpts1 = minisign.keypairGen(pwd, opts1)
   var keyOpts1 = minisign.formatKeys(keyGenOpts1)
-  var PKopts1 = keyOpts1.PK
-  var SKopts1 = keyOpts1.SK
 
-  var keyGenOpts2 = minisign.keypairGen('', opts2)
+  var keyGenOpts2 = minisign.keypairGen(pwd, opts2)
   var keyOpts2 = minisign.formatKeys(keyGenOpts2)
-  var PKopts2 = keyOpts2.PK
-  var SKopts2 = keyOpts2.SK
 
   t.equal(keyOpts1.PKcomment, keyOpts1.SKcomment)
   t.equal(keyOpts2.PKcomment, keyOpts2.SKcomment)
-  t.deepEqual(PKopts1.subarray(startIndex, endIndex1), comment1)
-  t.deepEqual(SKopts1.subarray(startIndex, endIndex1), comment1)
-  t.deepEqual(PKopts2.subarray(startIndex, endIndex2), comment2)
-  t.deepEqual(SKopts2.subarray(startIndex, endIndex2), comment2)
+  t.deepEqual(keyOpts1.PK.subarray(startIndex, endIndex1), comment1)
+  t.deepEqual(keyOpts2.SK.subarray(startIndex, endIndex2), comment2)
   t.end()
 })

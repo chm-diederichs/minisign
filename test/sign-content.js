@@ -1,15 +1,20 @@
 var test = require('tape')
 var minisign = require('../minisign.js')
+var sodium = require('sodium-native')
 var fs = require('fs')
 
-test('sign empty content with MINISIGN key, no tComment given', function (t) {
+test('sign empty content with minisign key, no tComment given', function (t) {
   var comment = 'untrusted comment: signature from minisign secret key'
   var noContent = Buffer.alloc(0)
+
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
 
   fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
-    var SKdetails = minisign.extractSecretKey('', SKinfo)
+    var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
 
     var signOutput = minisign.signContent(noContent, SKdetails)
     var parsedOutput = minisign.parseSignature(signOutput.outputBuf)
@@ -31,10 +36,14 @@ test('sign empty content with MINISIGN key, no tComment given', function (t) {
 test('sign emoji content with minisign key', function (t) {
   var comment = 'untrusted comment: signature from minisign secret key'
 
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
+
   fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
-    var SKdetails = minisign.extractSecretKey('', SKinfo)
+    var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
 
     fs.readFile('./test/fixtures/emoji.txt', function (err, content) {
       t.error(err)
@@ -60,10 +69,14 @@ test('sign emoji content with minisign key', function (t) {
 test('sign large input content, no opts', function (t) {
   var comment = 'untrusted comment: signature from minisign secret key'
 
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
+
   fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
-    var SKdetails = minisign.extractSecretKey('', SKinfo)
+    var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
 
     fs.readFile('./test/fixtures/long-comment.txt.minisig', function (err, content) {
       t.error(err)
@@ -91,10 +104,15 @@ test('sign with large, emoji comment / tComment', function (t) {
   var comment = 'untrusted comment: signature from minisign secret key'
   var contentToSign = Buffer.from('sign me please.')
 
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
+
   fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
-    var SKdetails = minisign.extractSecretKey('', SKinfo)
+    var SKdetails1 = minisign.extractSecretKey(pwd, SKinfo)
+    var SKdetails2 = minisign.extractSecretKey(pwd, SKinfo)
 
     fs.readFile('./test/fixtures/emoji.txt', function (err, emoji) {
       t.error(err)
@@ -107,11 +125,11 @@ test('sign with large, emoji comment / tComment', function (t) {
         tComment: emoji.toString()
       }
 
-      var signOutput1 = minisign.signContent(contentToSign, SKdetails, opts1)
+      var signOutput1 = minisign.signContent(contentToSign, SKdetails1, opts1)
       var untrustedComment1 = signOutput1.untrustedComment.toString().slice(19)
       var parsedOutput1 = minisign.parseSignature(signOutput1.outputBuf)
 
-      var signOutput2 = minisign.signContent(contentToSign, SKdetails, opts2)
+      var signOutput2 = minisign.signContent(contentToSign, SKdetails2, opts2)
       var untrustedComment2 = signOutput2.untrustedComment.toString()
       var parsedOutput2 = minisign.parseSignature(signOutput2.outputBuf)
 
@@ -127,6 +145,7 @@ test('sign with large, emoji comment / tComment', function (t) {
         t.error(err)
         var PKinfo = minisign.parsePubKey(PK)
         t.ok(minisign.verifySignature(parsedOutput1, contentToSign, PKinfo))
+        t.ok(sodium.crypto_sign_verify_detached(parsedOutput2.signature, contentToSign, PKinfo.publicKey))
         t.ok(minisign.verifySignature(parsedOutput2, contentToSign, PKinfo))
         t.end()
       })
@@ -134,13 +153,17 @@ test('sign with large, emoji comment / tComment', function (t) {
   })
 })
 
-test('use invalid secrety key', function (t) {
+test('use invalid secret key', function (t) {
   var toSign = Buffer.from('sign me please.')
+
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
 
   fs.readFile('./test/fixtures/no-comment.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
-    var SKdetails = minisign.extractSecretKey('', SKinfo)
+    var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
 
     fs.readFile('./test/fixtures/example.txt', function (err, content) {
       t.error(err)
@@ -152,7 +175,7 @@ test('use invalid secrety key', function (t) {
         t.error(err)
 
         var PKinfo = minisign.parsePubKey(PK)
-        t.throws(() => minisign.verifySignature(parsedOutput, toSign, PKinfo), '[ERR_ASSERTION]')
+        t.throws(() => minisign.verifySignature(parsedOutput, toSign, PKinfo), 'signature verification failed')
         t.end()
       })
     })
@@ -163,10 +186,14 @@ test('prehash and sign', function (t) {
   var comment = 'untrusted comment: signature from minisign secret key'
   var contentToSign = Buffer.from('sign me please.')
 
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
+
   fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
-    var SKdetails = minisign.extractSecretKey('', SKinfo)
+    var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
 
     fs.readFile('./test/fixtures/long-trusted-comment.txt', function (err, content) {
       t.error(err)
@@ -197,10 +224,14 @@ test('prehash and sign', function (t) {
 test('use invalid signature algorithm', function (t) {
   var toSign = Buffer.from('sign me please.')
 
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
+
   fs.readFile('./test/fixtures/no-comment.key', function (err, SK) {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
-    var SKdetails = minisign.extractSecretKey('', SKinfo)
+    var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
 
     fs.readFile('./test/fixtures/example.txt', function (err, content) {
       t.error(err)
@@ -216,12 +247,16 @@ test('use invalid signature algorithm', function (t) {
 })
 
 test('sign with keypairGen keys', function (t) {
-  var keyGen = minisign.keypairGen('')
+  var emptyBuf = Buffer.from('')
+  var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
+  pwd.fill(emptyBuf)
+
+  var keyGen = minisign.keypairGen(pwd)
   var key = minisign.formatKeys(keyGen)
 
   var PK = minisign.parsePubKey(key.PK)
   var SKinfo = minisign.parseSecretKey(key.SK)
-  var SK = minisign.extractSecretKey('', SKinfo)
+  var SK = minisign.extractSecretKey(pwd, SKinfo)
 
   var toSign = Buffer.from('sign me please.')
 

@@ -9,7 +9,7 @@ const untrustedCommentStart = untrustedPrelude.byteLength
 
 // parse public key data saved to file in minisign format
 function parsePubKey (pubkeyBuf) {
-  assert(untrustedPrelude.equals(pubkeyBuf.subarray(0, untrustedCommentStart)))
+  assert(untrustedPrelude.equals(pubkeyBuf.subarray(0, untrustedCommentStart)), 'file format not recognised')
   const untrustedCommentEnd = pubkeyBuf.indexOf('\n', untrustedCommentStart)
   const untrustedComment = pubkeyBuf.subarray(untrustedCommentStart, untrustedCommentEnd)
 
@@ -21,6 +21,7 @@ function parsePubKey (pubkeyBuf) {
   const keyID = keyInfo.subarray(2, 10)
   const publicKey = keyInfo.subarray(10)
   assert(publicKey.byteLength === (sodium.crypto_sign_PUBLICKEYBYTES), 'invalid public key given')
+  assert(keyInfoStart === pubkeyBuf.length - 57, 'file format not recognised')
 
   return {
     untrustedComment,
@@ -48,7 +49,7 @@ function parseKeyCLI (pubKeyString) {
 
 // takes signature buffer and returns info as buffers
 function parseSignature (signatureBuf) {
-  assert(untrustedPrelude.equals(signatureBuf.subarray(0, untrustedCommentStart)))
+  assert(untrustedPrelude.equals(signatureBuf.subarray(0, untrustedCommentStart)), 'file format not recognised')
 
   const untrustedCommentEnd = signatureBuf.indexOf('\n', untrustedCommentStart)
   const untrustedComment = signatureBuf.subarray(untrustedCommentStart, untrustedCommentEnd)
@@ -66,8 +67,8 @@ function parseSignature (signatureBuf) {
   const trustedCommentEnd = signatureBuf.indexOf('\n', trustedCommentStart)
   const trustedComment = signatureBuf.subarray(trustedCommentStart, trustedCommentEnd)
 
-  assert(signatureBuf.subarray(sigInfoEnd + 1, trustedCommentStart).equals(trustedPrelude))
-  assert(trustedCommentEnd === signatureBuf.length - 90)
+  assert(signatureBuf.subarray(sigInfoEnd + 1, trustedCommentStart).equals(trustedPrelude), 'file format not recognised')
+  assert(trustedCommentEnd === signatureBuf.length - 90, 'file format not recognised')
 
   const globalSignatureBase64 = signatureBuf.subarray(trustedCommentEnd + 1).toString()
   const globalSignature = Buffer.from(globalSignatureBase64, 'base64')
@@ -84,7 +85,7 @@ function parseSignature (signatureBuf) {
 
 // takes encrypted secret key buffer and returns info as buffers
 function parseSecretKey (secretKeyBuf) {
-  assert(untrustedPrelude.equals(secretKeyBuf.subarray(0, untrustedCommentStart)))
+  assert(untrustedPrelude.equals(secretKeyBuf.subarray(0, untrustedCommentStart)), 'file format not recognised')
 
   const untrustedCommentEnd = secretKeyBuf.indexOf('\n', untrustedCommentStart)
   const untrustedComment = secretKeyBuf.subarray(untrustedCommentStart, untrustedCommentEnd).toString()
@@ -93,8 +94,7 @@ function parseSecretKey (secretKeyBuf) {
   const secretKeyInfoEnd = secretKeyBuf.indexOf('\n', secretKeyInfoStart)
   const secretKeyInfoBase64 = secretKeyBuf.subarray(secretKeyInfoStart, secretKeyInfoEnd)
   const secretKeyInfo = Buffer.from(secretKeyInfoBase64.toString(), 'base64')
-
-  assert(secretKeyInfoBase64.length = 212)
+  assert(secretKeyInfoBase64.length === 212, 'base64 conversion failed, was an actual secret key given?')
 
   const signatureAlgorithm = secretKeyInfo.subarray(0, 2)
   const kdfAlgorithm = secretKeyInfo.subarray(2, 4)
@@ -104,7 +104,7 @@ function parseSecretKey (secretKeyBuf) {
   const kdfMemLimit = secretKeyInfo.readUInt32LE(46)
   const keynumSK = secretKeyInfo.subarray(secretKeyInfo.length - 104)
 
-  assert(secretKeyInfoEnd === secretKeyBuf.length - 1)
+  assert(secretKeyInfoEnd === secretKeyBuf.length - 1, 'file format not recognised')
 
   return {
     untrustedComment,
@@ -143,7 +143,7 @@ function extractSecretKey (pwd, parsedSK) {
   sodium.sodium_mprotect_noaccess(secretKey)
 
   sodium.crypto_generichash(sumCheck, sumCheckData)
-  assert(sumCheck.equals(checkSum))
+  assert(sumCheck.equals(checkSum), 'invalid check sum')
 
   return {
     keyID,
