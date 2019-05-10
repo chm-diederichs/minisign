@@ -3,7 +3,7 @@ var minisign = require('../minisign')
 var fs = require('fs')
 var sodium = require('sodium-native')
 
-test('key generation with empty password', function (t) {
+test('key generation with empty password', (t) => {
   const untrustedPrelude = Buffer.from('untrusted comment: ')
   var endIndex = untrustedPrelude.byteLength
 
@@ -21,7 +21,7 @@ test('key generation with empty password', function (t) {
   t.deepEqual(PKoutput.subarray(0, endIndex), untrustedPrelude)
   t.deepEqual(SKoutput.subarray(0, endIndex), untrustedPrelude)
 
-  fs.readFile('./test/fixtures/no-string.key', function (err, SKinfo) {
+  fs.readFile('./test/fixtures/no-string.key', (err, SKinfo) => {
     t.error(err)
     t.equal(SKoutput.byteLength, SKinfo.byteLength)
     t.deepEqual(noStringPwdKeyInfo.publicKey, PKinfo.subarray(-32))
@@ -29,7 +29,7 @@ test('key generation with empty password', function (t) {
   })
 })
 
-test('key generation with string password', function (t) {
+test('key generation with string password', (t) => {
   const untrustedPrelude = Buffer.from('untrusted comment: ')
   var endIndex = untrustedPrelude.byteLength
 
@@ -47,7 +47,7 @@ test('key generation with string password', function (t) {
   t.deepEqual(PKoutput.subarray(0, endIndex), untrustedPrelude)
   t.deepEqual(SKoutput.subarray(0, endIndex), untrustedPrelude)
 
-  fs.readFile('./test/fixtures/string.key', function (err, SKinfo) {
+  fs.readFile('./test/fixtures/string.key', (err, SKinfo) => {
     t.error(err)
     t.equal(SKoutput.byteLength, SKinfo.byteLength)
     t.deepEqual(stringPwdKeyInfo.publicKey, PKinfo.subarray(-32))
@@ -55,7 +55,7 @@ test('key generation with string password', function (t) {
   })
 })
 
-test('key generation with emoji password', function (t) {
+test('key generation with emoji password', (t) => {
   const untrustedPrelude = Buffer.from('untrusted comment: ')
   var endIndex = untrustedPrelude.byteLength
 
@@ -73,7 +73,7 @@ test('key generation with emoji password', function (t) {
   t.deepEqual(PKoutput.subarray(0, endIndex), untrustedPrelude)
   t.deepEqual(SKoutput.subarray(0, endIndex), untrustedPrelude)
 
-  fs.readFile('./test/fixtures/emoji-string.key', function (err, SKinfo) {
+  fs.readFile('./test/fixtures/emoji-string.key', (err, SKinfo) => {
     t.error(err)
     t.equal(SKoutput.byteLength, SKinfo.byteLength)
     t.deepEqual(emojiPwdKeyInfo.publicKey, PKinfo.subarray(-32))
@@ -81,7 +81,7 @@ test('key generation with emoji password', function (t) {
   })
 })
 
-test('keypairGen with only one comment', function (t) {
+test('keypairGen with only one comment', (t) => {
   const untrustedPrelude = Buffer.from('untrusted comment: ')
   var startIndex = untrustedPrelude.byteLength
   var comment1 = Buffer.from('this will appear in public key,')

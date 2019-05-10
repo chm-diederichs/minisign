@@ -5,10 +5,10 @@ var fs = require('fs')
 var sodium = require('sodium-native')
 var reverse = require('buffer-reverse')
 
-test('minisign generated key', function (t) {
+test('minisign generated key', (t) => {
   const comment = 'minisign public key A4570084F07E7F64'
 
-  fs.readFile('./test/fixtures/minisign.pub', function (err, pubkey) {
+  fs.readFile('./test/fixtures/minisign.pub', (err, pubkey) => {
     var PKinfo = minisign.parsePubKey(pubkey)
     var formatKeyID = reverse(PKinfo.keyID).toString('hex').toUpperCase()
 
@@ -20,7 +20,7 @@ test('minisign generated key', function (t) {
   })
 })
 
-test('minisign.js generated key', function (t) {
+test('minisign.js generated key', (t) => {
   var emptyBuf = Buffer.from('')
   var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
   pwd.fill(emptyBuf)
@@ -37,16 +37,16 @@ test('minisign.js generated key', function (t) {
   t.end()
 })
 
-test('minisign generated key with comment removed', function (t) {
-  fs.readFile('./test/fixtures/missing-comment.pub', function (err, pubkey) {
+test('minisign generated key with comment removed', (t) => {
+  fs.readFile('./test/fixtures/missing-comment.pub', (err, pubkey) => {
     t.error(err)
     t.throws(() => minisign.parsePubKey(pubkey), 'file format not recognised')
     t.end()
   })
 })
 
-test('key with long comment', function (t) {
-  fs.readFile('./test/fixtures/long-comment.pub', function (err, pubkey) {
+test('key with long comment', (t) => {
+  fs.readFile('./test/fixtures/long-comment.pub', (err, pubkey) => {
     t.error(err)
     var PKinfo = minisign.parsePubKey(pubkey)
 
@@ -55,28 +55,28 @@ test('key with long comment', function (t) {
   })
 })
 
-test('minisign key with one character removed', function (t) {
-  fs.readFile('./test/fixtures/invalid-key.pub', function (err, pubkey) {
+test('minisign key with one character removed', (t) => {
+  fs.readFile('./test/fixtures/invalid-key.pub', (err, pubkey) => {
     t.error(err)
     t.throws(() => minisign.parsePubKey(pubkey), 'file format not recognised')
     t.end()
   })
 })
 
-test('minisign key with no line break', function (t) {
-  fs.readFile('./test/fixtures/no-line-break.pub', function (err, pubkey) {
+test('minisign key with no line break', (t) => {
+  fs.readFile('./test/fixtures/no-line-break.pub', (err, pubkey) => {
     t.error(err)
     t.throws(() => minisign.parsePubKey(pubkey), 'file format not recognised')
     t.end()
   })
 })
 
-test('minisign key with extra line breaks', function (t) {
-  fs.readFile('./test/fixtures/extra-line-breaks1.pub', function (err, pubkey) {
+test('minisign key with extra line breaks', (t) => {
+  fs.readFile('./test/fixtures/extra-line-breaks1.pub', (err, pubkey) => {
     t.error(err)
     t.throws(() => minisign.parsePubKey(pubkey), 'file format not recognised')
   })
-  fs.readFile('./test/fixtures/extra-line-breaks2.pub', function (err, pubkey) {
+  fs.readFile('./test/fixtures/extra-line-breaks2.pub', (err, pubkey) => {
     t.error(err)
     t.throws(() => minisign.parsePubKey(pubkey), 'file format not recognised')
     t.end()

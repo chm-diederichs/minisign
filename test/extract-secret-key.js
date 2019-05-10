@@ -3,15 +3,15 @@ var minisign = require('../minisign.js')
 var fs = require('fs')
 var sodium = require('sodium-native')
 
-test('key generated with no password', function (t) {
+test('key generated with no password', (t) => {
   var emptyBuf = Buffer.from('')
   var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
   pwd.fill(emptyBuf)
-  fs.readFile('./test/fixtures/no-string.key', function (err, SK) {
+  fs.readFile('./test/fixtures/no-string.key', (err, SK) => {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
-    fs.readFile('./test/fixtures/no-string.pub', function (err, PK) {
+    fs.readFile('./test/fixtures/no-string.pub', (err, PK) => {
       t.error(err)
       var publicKeyID = minisign.parsePubKey(PK).keyID
 
@@ -23,15 +23,15 @@ test('key generated with no password', function (t) {
   })
 })
 
-test('key generated with emoji password', function (t) {
+test('key generated with emoji password', (t) =>{
   var emojiBuf = Buffer.from('testing👫')
   var pwd = sodium.sodium_malloc(emojiBuf.byteLength)
   pwd.fill(emojiBuf)
-  fs.readFile('./test/fixtures/emoji-string.key', function (err, SK) {
+  fs.readFile('./test/fixtures/emoji-string.key', (err, SK) =>{
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
-    fs.readFile('./test/fixtures/emoji-string.pub', function (err, PK) {
+    fs.readFile('./test/fixtures/emoji-string.pub', (err, PK) =>{
       t.error(err)
       var publicKeyID = minisign.parsePubKey(PK).keyID
 
@@ -44,16 +44,16 @@ test('key generated with emoji password', function (t) {
 })
 
 // cannot use password this long via minisign in terminal
-test('key generated with long password [180KB]', function (t) {
-  fs.readFile('./test/fixtures/long-comment.pub', function (err, data) {
+test('key generated with long password [180KB]', (t) => {
+  fs.readFile('./test/fixtures/long-comment.pub', (err, data) => {
     t.error(err)
     var pwd = sodium.sodium_malloc(data.byteLength)
     pwd.fill(data)
-    fs.readFile('./test/fixtures/long-pwd.key', function (err, SK) {
+    fs.readFile('./test/fixtures/long-pwd.key', (err, SK) => {
       t.error(err)
       var SKinfo = minisign.parseSecretKey(SK)
       var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
-      fs.readFile('./test/fixtures/long-pwd.pub', function (err, PK) {
+      fs.readFile('./test/fixtures/long-pwd.pub', (err, PK) => {
         t.error(err)
         var publicKeyID = minisign.parsePubKey(PK).keyID
 
@@ -66,11 +66,11 @@ test('key generated with long password [180KB]', function (t) {
   })
 })
 
-test('using too small kdfOpsLimit', function (t) {
+test('using too small kdfOpsLimit', (t) => {
   var emptyBuf = Buffer.from('')
   var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
   pwd.fill(emptyBuf)
-  fs.readFile('./test/fixtures/no-string.key', function (err, SK) {
+  fs.readFile('./test/fixtures/no-string.key', (err, SK) => {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     SKinfo.kdfOpsLimit--
@@ -80,11 +80,11 @@ test('using too small kdfOpsLimit', function (t) {
   })
 })
 
-test('using too small kdfMemLimit', function (t) {
+test('using too small kdfMemLimit', (t) => {
   var emptyBuf = Buffer.from('')
   var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
   pwd.fill(emptyBuf)
-  fs.readFile('./test/fixtures/no-string.key', function (err, SK) {
+  fs.readFile('./test/fixtures/no-string.key', (err, SK) => {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     SKinfo.kdfMemLimit--
@@ -94,11 +94,11 @@ test('using too small kdfMemLimit', function (t) {
   })
 })
 
-test('invalid input - missing salt', function (t) {
+test('invalid input - missing salt', (t) => {
   var emptyBuf = Buffer.from('')
   var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
   pwd.fill(emptyBuf)
-  fs.readFile('./test/fixtures/no-string.key', function (err, SK) {
+  fs.readFile('./test/fixtures/no-string.key', (err, SK) => => {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     delete SKinfo.kdfSalt
@@ -108,11 +108,11 @@ test('invalid input - missing salt', function (t) {
   })
 })
 
-test('wrong kdfSalt', function (t) {
+test('wrong kdfSalt', (t) => {
   var emptyBuf = Buffer.from('')
   var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
   pwd.fill(emptyBuf)
-  fs.readFile('./test/fixtures/no-string.key', function (err, SK) {
+  fs.readFile('./test/fixtures/no-string.key', (err, SK) => {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     SKinfo.kdfSalt++
@@ -122,7 +122,7 @@ test('wrong kdfSalt', function (t) {
   })
 })
 
-test('keypairGen output', function (t) {
+test('keypairGen output', (t) => {
   var emptyBuf = Buffer.from('')
   var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
   pwd.fill(emptyBuf)

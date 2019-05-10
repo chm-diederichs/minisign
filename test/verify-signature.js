@@ -4,12 +4,12 @@ var minisign = require('../minisign.js')
 var fs = require('fs')
 var sodium = require('sodium-native')
 
-test('verify minisign generated signature', function (t) {
-  fs.readFile('./test/fixtures/example.txt.minisig', function (err, signature) {
+test('verify minisign generated signature', (t) => {
+  fs.readFile('./test/fixtures/example.txt.minisig', (err, signature) => {
     t.error(err)
-    fs.readFile('./test/fixtures/example.txt', function (err, content) {
+    fs.readFile('./test/fixtures/example.txt', (err, content) => {
       t.error(err)
-      fs.readFile('./test/fixtures/minisign.pub', function (err, publicKeyBuf) {
+      fs.readFile('./test/fixtures/minisign.pub', (err, publicKeyBuf) => {
         t.error(err)
         var PKinfo = minisign.parsePubKey(publicKeyBuf)
         var parsedSignature = minisign.parseSignature(signature)
@@ -21,12 +21,12 @@ test('verify minisign generated signature', function (t) {
   })
 })
 
-test('PK ID != SK ID', function (t) {
-  fs.readFile('./test/fixtures/example.txt.minisig', function (err, signature) {
+test('PK ID != SK ID', (t) => {
+  fs.readFile('./test/fixtures/example.txt.minisig', (err, signature) => {
     t.error(err)
-    fs.readFile('./test/fixtures/example.txt', function (err, content) {
+    fs.readFile('./test/fixtures/example.txt', (err, content) => {
       t.error(err)
-      fs.readFile('./test/fixtures/minisign.pub', function (err, publicKeyBuf) {
+      fs.readFile('./test/fixtures/minisign.pub', (err, publicKeyBuf) => {
         t.error(err)
         var PKinfo = minisign.parsePubKey(publicKeyBuf)
         var parsedSignature = minisign.parseSignature(signature)
@@ -39,12 +39,12 @@ test('PK ID != SK ID', function (t) {
   })
 })
 
-test('verify minisign prehashed signature', function (t) {
-  fs.readFile('./test/fixtures/pre-hashed.txt.minisig', function (err, signature) {
+test('verify minisign prehashed signature', (t) => {
+  fs.readFile('./test/fixtures/pre-hashed.txt.minisig', (err, signature) => {
     t.error(err)
-    fs.readFile('./test/fixtures/example.txt', function (err, content) {
+    fs.readFile('./test/fixtures/example.txt', (err, content) => {
       t.error(err)
-      fs.readFile('./test/fixtures/minisign.pub', function (err, publicKeyBuf) {
+      fs.readFile('./test/fixtures/minisign.pub', (err, publicKeyBuf) => {
         t.error(err)
         var PKinfo = minisign.parsePubKey(publicKeyBuf)
         var parsedSignature = minisign.parseSignature(signature)
@@ -56,12 +56,12 @@ test('verify minisign prehashed signature', function (t) {
   })
 })
 
-test('same key, different content', function (t) {
-  fs.readFile('./test/fixtures/wrong-info.txt.minisig', function (err, signature) {
+test('same key, different content', (t) => {
+  fs.readFile('./test/fixtures/wrong-info.txt.minisig', (err, signature) => {
     t.error(err)
-    fs.readFile('./test/fixtures/example.txt', function (err, content) {
+    fs.readFile('./test/fixtures/example.txt', (err, content) => {
       t.error(err)
-      fs.readFile('./test/fixtures/minisign.pub', function (err, publicKeyBuf) {
+      fs.readFile('./test/fixtures/minisign.pub', (err, publicKeyBuf) => {
         t.error(err)
         var PKinfo = minisign.parsePubKey(publicKeyBuf)
         var parsedSignature = minisign.parseSignature(signature)
@@ -73,12 +73,12 @@ test('same key, different content', function (t) {
   })
 })
 
-test('globalSignature altered', function (t) {
-  fs.readFile('./test/fixtures/wrong-global-sig.txt.minisig', function (err, signature) {
+test('globalSignature altered', (t) => {
+  fs.readFile('./test/fixtures/wrong-global-sig.txt.minisig', (err, signature) => {
     t.error(err)
-    fs.readFile('./test/fixtures/example.txt', function (err, content) {
+    fs.readFile('./test/fixtures/example.txt', (err, content) => {
       t.error(err)
-      fs.readFile('./test/fixtures/minisign.pub', function (err, publicKeyBuf) {
+      fs.readFile('./test/fixtures/minisign.pub', (err, publicKeyBuf) => {
         t.error(err)
         var PKinfo = minisign.parsePubKey(publicKeyBuf)
         var parsedSignature = minisign.parseSignature(signature)
@@ -90,12 +90,12 @@ test('globalSignature altered', function (t) {
   })
 })
 
-test('emoji trusted comment', function (t) {
-  fs.readFile('./test/fixtures/emoji-comment.txt.minisig', function (err, signature) {
+test('emoji trusted comment', (t) => {
+  fs.readFile('./test/fixtures/emoji-comment.txt.minisig', (err, signature) => {
     t.error(err)
-    fs.readFile('./test/fixtures/example.txt', function (err, content) {
+    fs.readFile('./test/fixtures/example.txt', (err, content) => {
       t.error(err)
-      fs.readFile('./test/fixtures/minisign.pub', function (err, publicKeyBuf) {
+      fs.readFile('./test/fixtures/minisign.pub', (err, publicKeyBuf) => {
         t.error(err)
         var PKinfo = minisign.parsePubKey(publicKeyBuf)
         var parsedSignature = minisign.parseSignature(signature)
@@ -107,7 +107,7 @@ test('emoji trusted comment', function (t) {
   })
 })
 
-test('signContent generated input', function (t) {
+test('signContent generated input', (t) => {
   var toSign = Buffer.alloc(200)
   sodium.randombytes_buf(toSign)
 
@@ -115,7 +115,7 @@ test('signContent generated input', function (t) {
   var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
   pwd.fill(emptyBuf)
 
-  fs.readFile('./test/fixtures/minisign.key', function (err, SK) {
+  fs.readFile('./test/fixtures/minisign.key', (err, SK) => {
     t.error(err)
 
     var SKinfo = minisign.parseSecretKey(SK)
@@ -124,7 +124,7 @@ test('signContent generated input', function (t) {
     var signedOutput = minisign.signContent(toSign, SKdetails).outputBuf
     var parsedOutput = minisign.parseSignature(signedOutput)
 
-    fs.readFile('./test/fixtures/minisign.pub', function (err, PK) {
+    fs.readFile('./test/fixtures/minisign.pub', (err, PK) => {
       t.error(err)
       var PKinfo = minisign.parsePubKey(PK)
       t.ok(minisign.verifySignature(parsedOutput, toSign, PKinfo))
