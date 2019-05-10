@@ -21,9 +21,9 @@ var args = minimist(process.argv.slice(2), {
 
 const usage = `
   Usage:
-  $ node CLI-sign -G [-F] [-p pubkey file] [-s seckey file] -k pwd
-  $ node CLI-sign -S [-H] [-s seckey file] [-x signature file] [-c comment] [-t trusted comment] -k pwd -m file
-  $ node ClI-sign -V [-x signature file] [-p pubkey file | -P public key] [-o] [-q] -m file
+  $ minisign -G [-F] [-p pubkey file] [-s seckey file] [-c pubkey comment] [-t seckey comment] -k pwd
+  $ minisign -S [-H] [-s seckey file] [-x signature file] [-c comment] [-t trusted comment] -k pwd -m file
+  $ minisign -V [-x signature file] [-p pubkey file | -P public key] [-o] [-q] -m file
 
   -G                generate a new key pair
   -S                sign a file
@@ -45,7 +45,7 @@ const usage = `
 
 // function to verify given signature
 function verify (signature, sourceFile, PKinfo, output, quiet, pretty) {
-  fs.readFile(sourceFile, function (err, message) {
+  fs.readFile(sourceFile, (err, message) => {
     if (err) throw err
     var sigInfo = minisign.parseSignature(signature)
     if (minisign.verifySignature(sigInfo, message, PKinfo)) {
@@ -70,9 +70,9 @@ function verify (signature, sourceFile, PKinfo, output, quiet, pretty) {
 
 // function to sign a given file
 function sign (opts, pwd) {
-  fs.readFile(opts.sourceFile, function (err, message) {
+  fs.readFile(opts.sourceFile, (err, message) => {
     if (err) throw err
-    fs.readFile(opts.SKfile, function (err, SK) {
+    fs.readFile(opts.SKfile, (err, SK) => {
       if (err) throw err
       var parsedSK = minisign.parseSecretKey(SK)
       var SKinfo = minisign.extractSecretKey(pwd, parsedSK)
@@ -80,7 +80,7 @@ function sign (opts, pwd) {
       var signedOutput = minisign.signContent(message, SKinfo, opts)
       var stringOutput = signedOutput.outputBuf.toString()
 
-      fs.writeFile(opts.sigFile, stringOutput, function (err) {
+      fs.writeFile(opts.sigFile, stringOutput, (err) => {
         if (err) throw err
         console.log('signature saved to ', opts.sigFile)
         process.exit()
@@ -220,13 +220,13 @@ if (args.V) {
     sigFile = path.resolve(cwd, args.x)
   }
 
-  fs.readFile(sigFile, function (err, signature) {
+  fs.readFile(sigFile, (err, signature) => {
     if (err) throw err
     if (args.P) {
       var PKinfo = minisign.parseKeyCLI(args.P)
       verify(signature, sourceFile, PKinfo, args.o, args.q, args.Q)
     } else {
-      fs.readFile(PKfile, function (err, PK) {
+      fs.readFile(PKfile, (err, PK) => {
         if (err) throw err
         var PKinfo = minisign.parsePubKey(PK)
         verify(signature, sourceFile, PKinfo, args.o, args.q, args.Q)

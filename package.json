@@ -31,9 +31,10 @@
   },
   "homepage": "https://github.com/chm-diederichs/minisign#readme",
   "directories": {
-    "test": "test"
+    "test": "test",
+    "bin": "bin"
   },
   "bin": {
-    "mini-sign": "./cli.js"
+    "minisign": "./bin/minisign"
   }
 }

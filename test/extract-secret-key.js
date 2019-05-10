@@ -23,15 +23,15 @@ test('key generated with no password', (t) => {
   })
 })
 
-test('key generated with emoji password', (t) =>{
+test('key generated with emoji password', (t) => {
   var emojiBuf = Buffer.from('testing👫')
   var pwd = sodium.sodium_malloc(emojiBuf.byteLength)
   pwd.fill(emojiBuf)
-  fs.readFile('./test/fixtures/emoji-string.key', (err, SK) =>{
+  fs.readFile('./test/fixtures/emoji-string.key', (err, SK) => {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     var SKdetails = minisign.extractSecretKey(pwd, SKinfo)
-    fs.readFile('./test/fixtures/emoji-string.pub', (err, PK) =>{
+    fs.readFile('./test/fixtures/emoji-string.pub', (err, PK) => {
       t.error(err)
       var publicKeyID = minisign.parsePubKey(PK).keyID
 
@@ -98,7 +98,7 @@ test('invalid input - missing salt', (t) => {
   var emptyBuf = Buffer.from('')
   var pwd = sodium.sodium_malloc(emptyBuf.byteLength)
   pwd.fill(emptyBuf)
-  fs.readFile('./test/fixtures/no-string.key', (err, SK) => => {
+  fs.readFile('./test/fixtures/no-string.key', (err, SK) => {
     t.error(err)
     var SKinfo = minisign.parseSecretKey(SK)
     delete SKinfo.kdfSalt
