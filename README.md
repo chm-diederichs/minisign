@@ -103,7 +103,7 @@ The functions are defined in `minisign.js`.
 
 ### Signing content provided as `buffer`
 
-`signContent(content, SKdetails, opts)` takes content as `buffer`,  secret key details directly from `extractSecretKey` and `opts = { comment, tComment, sigAlgorithm = 'Ed' || 'ED'` and returns a minisign formatted output together with signature properties:
+`signContent(content, SKdetails, opts)` takes content as `buffer`,  secret key details directly from `extractSecretKey` and `opts = { comment, tComment, sigAlgorithm = 'Ed' || 'ED' }` and returns a minisign formatted output together with signature properties:
 ```javascript
 {
   outputBuf,
@@ -122,7 +122,7 @@ Returns `true` for succesful verification or prints `err` otherwise.
 
 ### Generating Keys
 
-`keypairGen(passwordd, opts)` takes password as a secure buffer and `opts = { PKcomment, SKcomment, sigAlgorithm = 'Ed', kdfAlgorithm = 'Sc', ckSumAlgorithm = 'B2'}`. Returns key information as `buffer`s:
+`keypairGen(passwordd, opts)` takes password as a secure buffer and `opts = { PKcomment, SKcomment, sigAlgorithm = 'Ed', kdfAlgorithm = 'Sc', ckSumAlgorithm = 'B2' }`. Returns key information as `buffer`s:
 
 ```javascript
 {
