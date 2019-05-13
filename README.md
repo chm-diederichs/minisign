@@ -6,7 +6,7 @@
 
 `minisign` is a CLI tool to perform minisign operations.
 
-The functions are defined in `minisign.js`.
+All functions are defined in `minisign.js`.
 
 ### Usage
 
