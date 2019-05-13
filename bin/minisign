@@ -93,6 +93,7 @@ function sign (opts, pwd) {
 function generate (opts, pwd) {
   var newKeys = minisign.keypairGen(pwd, opts)
   var keys = minisign.formatKeys(newKeys)
+  var publicKey = newKeys.publicKey.toString()
 
   fs.writeFile(opts.PKfile, keys.PK.toString(), opts.overwrite, (err) => {
     if (err && err.code === 'EEXIST') {
@@ -105,7 +106,9 @@ function generate (opts, pwd) {
         process.exit(1)
       }
     })
-    console.log('public key save to ', opts.PKfile)
+
+    console.log('public key: ' + publicKey)
+    console.log('public key saved to ', opts.PKfile)
     console.log('secret key encrypted and saved to ', opts.SKfile)
   })
 }
@@ -138,7 +141,7 @@ var sigFile
 var opts = {}
 
 var SKfile = path.join(os.homedir(), '.minisign/minisign.key')
-var PKfile = path.join(os.homedir(), '.minisign/minisign.pub')
+var PKfile = path.resolve(cwd, '/minisign.pub')
 
 var tPrelude = 'trusted comment: '
 
