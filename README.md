@@ -12,13 +12,13 @@ The functions are defined in `minisign.js`.
 
 ## Generating a key pair
 
-```javascript
+```
 $ minisign -G
 ```
 
 Public key is printed and saved to `minisign.pub` file in the current working directory by default; the secret key is encrypted and saved to `~/.minisign/minisign.key` by default.
 
-```javascript
+```
 $ minisign -G -p publicKey.pub -c 'comment appears in public key' -t 'comment will appear in secret key'
 ```
 
@@ -26,13 +26,13 @@ Flags may be used to designate specific file names and to introduce comments, wh
 
 ## Signing files
 
-```javascript
+```
 $ minisign -Sm example.txt
 ```
 
 `example.txt` content is signed using `~/.minisign/minisign.key` and signature is saved to example.txt.minisig by default.
 
-```javascript
+```
 $ minisign -Sm example.txt -s specific.key -x signature.txt -t 'trusted comment'
 ```
 
@@ -40,13 +40,13 @@ Specific secret keys and signature files may be designated using the `-s` and `-
 
 ## Verifying a file
 
-```javascript
+```
 $ minisign -Vm example.txt -p example.pub
 ```
 
 or
 
-```javascript
+```
 $ minisign -Vm example.txt -x signature.txt -P RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3
 ```
 
@@ -54,29 +54,28 @@ If no signature file is specified, the signature file must be in the same direct
 
 ## Full usage information
 
-```javascript
-` Usage:
-  $ minisign -G [-F] [-p pubkey file] [-s seckey file] [-c pubkey comment] [-t seckey comment] -k pwd
-  $ minisign -S [-H] [-s seckey file] [-x signature file] [-c comment] [-t trusted comment] -k pwd -m file
-  $ minisign -V [-x signature file] [-p pubkey file | -P public key] [-o] [-q] -m file
+```
+ Usage:
+ $ minisign -G [-F] [-p pubkey file] [-s seckey file] [-c pubkey comment] [-t seckey comment] -k pwd
+ $ minisign -S [-H] [-s seckey file] [-x signature file] [-c comment] [-t trusted comment] -k pwd -m file
+ $ minisign -V [-x signature file] [-p pubkey file | -P public key] [-o] [-q] -m file
 
-  -G                generate a new key pair
-  -S                sign a file
-  -V                verify that a signature is valid for a given file
-  -m <file>         file to sign/verify
-  -o                combined with -V, output the file content after verification
-  -H                combined with -S, pre-hash in order to sign large files
-  -p <pubkeyfile>   public key file (default: ./minisign.pub)
-  -P <pubkey>       public key, as a base64 string
-  -s <seckey>       secret key file (default: ~/.minisign/minisign.key)
-  -x <sigfile>      signature file (default: <file>.minisig)
-  -c <comment>      add a one-line untrusted comment / comment for public key
-  -t <comment>      add a one-line trusted comment / comment for secret key
-  -q                quiet mode, suppress output
-  -Q                pretty quiet mode, only print the trusted comment - overrides quiet mode
-  -f                force. Combined with -G, overwrite a previous key pair
-  -v                display version number
-`
+ -G                generate a new key pair
+ -S                sign a file
+ -V                verify that a signature is valid for a given file
+ -m <file>         file to sign/verify
+ -o                combined with -V, output the file content after verification
+ -H                combined with -S, pre-hash in order to sign large files
+ -p <pubkeyfile>   public key file (default: ./minisign.pub)
+ -P <pubkey>       public key, as a base64 string
+ -s <seckey>       secret key file (default: ~/.minisign/minisign.key)
+ -x <sigfile>      signature file (default: <file>.minisig)
+ -c <comment>      add a one-line untrusted comment / comment for public key
+ -t <comment>      add a one-line trusted comment / comment for secret key
+ -q                quiet mode, suppress output
+ -Q                pretty quiet mode, only print the trusted comment - overrides quiet mode
+ -f                force. Combined with -G, overwrite a previous key pair
+ -v                display version number
 ```
 
 ### API
