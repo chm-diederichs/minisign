@@ -8,9 +8,9 @@
 
 All functions are defined in `minisign.js`.
 
-### Usage
+## Usage
 
-## Generating a key pair
+### Generating a key pair
 
 ```
 $ minisign -G
@@ -24,7 +24,7 @@ $ minisign -G -p publicKey.pub -c 'comment appears in public key' -t 'comment wi
 
 Flags may be used to designate specific file names and to introduce comments, which are displayed in the respective key files.
 
-## Signing files
+### Signing files
 
 ```
 $ minisign -Sm example.txt
@@ -38,7 +38,7 @@ $ minisign -Sm example.txt -s specific.key -x signature.txt -t 'trusted comment'
 
 Specific secret keys and signature files may be designated using the `-s` and `-x` flags respectively or the `-t` flag can be a trusted comment, which will be verified and displayed when verifying the file.
 
-## Verifying a file
+### Verifying a file
 
 ```
 $ minisign -Vm example.txt -p example.pub
@@ -52,7 +52,7 @@ $ minisign -Vm example.txt -x signature.txt -P RWQf6LRCGA9i53mlYecO4IzT51TGPpvWu
 
 If no signature file is specified, the signature file must be in the same directory as the original file and be of the form `(filename).minisig`. The public key may either be given as a file, `./minisign.pub` by default, or directly specified on the command line using the `-P` flag.
 
-## Full usage information
+### Full usage information
 
 ```
  Usage:
@@ -78,9 +78,9 @@ If no signature file is specified, the signature file must be in the same direct
  -v                display version number
 ```
 
-### API
+## API
 
-## Public Key
+### Public Key
 
 `parsePubKey(pubKeyFileContent)` takes public key file content as a `buffer` and returns key information as`buffer`s:
 ```javascript
@@ -102,7 +102,7 @@ If no signature file is specified, the signature file must be in the same direct
 }
 ```
 
-## Reading signature
+### Reading signature
 
 `parseSignature(sigFileContent)` takes signature file content as a `buffer` and returns signature information as `buffer`s:
 
@@ -117,7 +117,7 @@ If no signature file is specified, the signature file must be in the same direct
 }
 ```
 
-## Reading secret key
+### Reading secret key
 
 `parseSecretKey(secKeyFileContent)` takes secret key file content as a `buffer` and returns encrypted key information as `buffer`s if checksum is verified:
 
@@ -146,7 +146,7 @@ If no signature file is specified, the signature file must be in the same direct
 }
 ```
 
-## Signing content provided as `buffer`
+### Signing content provided as `buffer`
 
 `signContent(content, SKdetails, opts)` takes content as `buffer`,  secret key details directly from `extractSecretKey` and `opts = { comment, tComment, sigAlgorithm = 'Ed' || 'ED' }` and returns a minisign formatted output together with signature properties:
 ```javascript
@@ -159,13 +159,13 @@ If no signature file is specified, the signature file must be in the same direct
 }
 ```
 
-## Verifying signature
+### Verifying signature
 
 `verifySignature(signature, originalContent, publicKeyInfo)` first checks the key ID of the secret key used to sign corresponds to that of the public key given to verify, then the signature is verifieda nd lastly the global signature with the trusted comment included is verified. 
 
 Returns `true` for succesful verification or prints `err` otherwise.
 
-## Generating Keys
+### Generating Keys
 
 `keypairGen(passwordd, opts)` takes password as a secure buffer and `opts = { PKcomment, SKcomment, sigAlgorithm = 'Ed', kdfAlgorithm = 'Sc', ckSumAlgorithm = 'B2' }`. Returns key information as `buffer`s:
 
