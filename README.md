@@ -19,7 +19,7 @@ $ minisign -G
 Public key is printed and saved to `minisign.pub` file in the current working directory by default; the secret key is encrypted and saved to `~/.minisign/minisign.key` by default.
 
 ```
-$ minisign -G -p publicKey.pub -c 'comment appears in public key' -t 'comment will appear in secret key'
+$ minisign -G -p pubkey.pub -c 'public key comment' -t 'secret key comment'
 ```
 
 Flags may be used to designate specific file names and to introduce comments, which are displayed in the respective key files.
@@ -41,7 +41,7 @@ Specific secret keys and signature files may be designated using the `-s` and `-
 ### Verifying a file
 
 ```
-$ minisign -Vm example.txt -p example.pub
+$ minisign -Vm example.txt -p pubkey.pub
 ```
 
 or
