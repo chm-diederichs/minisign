@@ -5,6 +5,7 @@
   "main": "minisign.js",
   "dependencies": {
     "buffer-xor": "^2.0.2",
+    "minimist": "^1.2.0",
     "sodium-native": "^2.4.2"
   },
   "devDependencies": {
