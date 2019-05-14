@@ -26,8 +26,8 @@ mutableStdout.muted = true
 // import arguments from command line
 var args = minimist(process.argv.slice(2), {
   string: ['m', 'x', 's', 'p', 'P', 'c', 't', 'k'],
-  boolean: ['G', 'V', 'S', 'F', 'H', 'f', 'q', 'o', 'Q', 'help', 'version'],
-  alias: { h: 'help', v: 'version' },
+  boolean: ['G', 'V', 'S', 'F', 'H', 'f', 'q', 'o', 'Q', 'help', 'version', 'secure'],
+  alias: { h: 'help', v: 'version', X: 'secure' },
   unknown: function () {
     console.log('unrecognised command.')
     process.exit(1)
@@ -36,8 +36,8 @@ var args = minimist(process.argv.slice(2), {
 
 const usage = `
   Usage:
-  $ minisign -G [-F] [-p pubkey file] [-s seckey file] [-c pubkey comment] [-t seckey comment] -k pwd
-  $ minisign -S [-H] [-s seckey file] [-x signature file] [-c comment] [-t trusted comment] -k pwd -m file
+  $ minisign -G [-F] [-p pubkey file] [-s seckey file] [-c pubkey comment] [-t seckey comment]
+  $ minisign -S [-H] [-s seckey file] [-x signature file] [-c comment] [-t trusted comment] -m file
   $ minisign -V [-x signature file] [-p pubkey file | -P public key] [-o] [-q] -m file
 
   -G                generate a new key pair
@@ -56,6 +56,7 @@ const usage = `
   -Q                pretty quiet mode, only print the trusted comment - overrides quiet mode
   -f                force. Combined with -G, overwrite a previous key pair
   -v                display version number
+  -X                read password directly into secure buffer, note that input will not be hidden
 `
 
 // function to verify given signature
@@ -129,7 +130,17 @@ function generate (opts, pwd) {
 }
 
 // function to accept password from user
-function secureRead (opts, cb) {
+function secureRead (buf, opts, cb) {
+  process.stdout.write('password: ')
+  fs.read(0, buf, 0, buf.byteLength, null, (err, bytesRead, buf) => {
+    if (err) throw err
+    buf = buf.subarray(0, bytesRead - 1)
+    sodium.sodium_mprotect_noaccess(buf)
+    cb(opts, buf)
+  })
+}
+
+function hiddenRead (opts, cb) {
   var rl = readline.createInterface({
     input: process.stdin,
     output: mutableStdout,
@@ -137,6 +148,9 @@ function secureRead (opts, cb) {
   })
 
   var pwdBuf
+
+  // security issue: password is read as string before being passed
+  // into a secure buffer and therefore exists in memory
 
   process.stdout.write('password: ')
   rl.question('password: ', function (password) {
@@ -153,6 +167,7 @@ function secureRead (opts, cb) {
   })
 }
 
+// display info
 if (args.help) {
   console.log(usage)
   process.exit()
@@ -162,9 +177,10 @@ if (args.version) {
   process.exit()
 }
 
-// initiales fs variables
+// initiate variables
 var sourceFile
 var sigFile
+var passwordBuf
 var opts = {}
 
 var SKfile = path.join(os.homedir(), '.minisign/minisign.key')
@@ -191,7 +207,12 @@ if (args.G) {
     opts.overwrite = { flag: 'w' }
   }
 
-  secureRead(opts, generate)
+  if (args.secure) {
+    passwordBuf = sodium.sodium_malloc(4096)
+    secureRead(passwordBuf, opts, generate)
+  } else {
+    hiddenRead(opts, sign)
+  }
 }
 
 // signing a file
@@ -219,7 +240,12 @@ if (args.S) {
     process.exit(1)
   }
 
-  secureRead(opts, sign)
+  if (args.secure) {
+    passwordBuf = sodium.sodium_malloc(4096)
+    secureRead(passwordBuf, opts, sign)
+  } else {
+    hiddenRead(opts, sign)
+  }
 }
 
 // verifying a signature

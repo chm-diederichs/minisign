@@ -56,8 +56,8 @@ If no signature file is specified, the signature file must be in the same direct
 
 ```
  Usage:
- $ minisign -G [-F] [-p pubkey file] [-s seckey file] [-c pubkey comment] [-t seckey comment] -k pwd
- $ minisign -S [-H] [-s seckey file] [-x signature file] [-c comment] [-t trusted comment] -k pwd -m file
+ $ minisign -G [-F] [-p pubkey file] [-s seckey file] [-c pubkey comment] [-t seckey comment]
+ $ minisign -S [-H] [-s seckey file] [-x signature file] [-c comment] [-t trusted comment] -m file
  $ minisign -V [-x signature file] [-p pubkey file | -P public key] [-o] [-q] -m file
 
  -G                generate a new key pair
@@ -76,7 +76,14 @@ If no signature file is specified, the signature file must be in the same direct
  -Q                pretty quiet mode, only print the trusted comment - overrides quiet mode
  -f                force. Combined with -G, overwrite a previous key pair
  -v                display version number
+ -X                read password directly into secure buffer, note that input will not be hidden
 ```
+
+### Security issue
+
+When generating keys and signing documents a password is required to retrieve the secret key. In order to suppress the password input being displayed, this input is read from `stdin` as a string before being passed into a secure buffer and therefore exists in memory.
+
+This can be suppressed using the `--secure` flag, but note that the password input will not be hidden in the terminal window.
 
 ## API
 
