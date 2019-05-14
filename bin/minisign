@@ -8,7 +8,22 @@ var pkg = require('../package.json')
 var sodium = require('sodium-native')
 const cwd = process.cwd()
 const minimist = require('minimist')
+var readline = require('readline')
+var Writable = require('stream').Writable
 
+// create muted output stream to read password
+var mutableStdout = new Writable({
+  write: function (chunk, encoding, callback) {
+    if (!this.muted) {
+      process.stdout.write(chunk, encoding)
+    }
+    callback()
+  }
+})
+
+mutableStdout.muted = true
+
+// import arguments from command line
 var args = minimist(process.argv.slice(2), {
   string: ['m', 'x', 's', 'p', 'P', 'c', 't', 'k'],
   boolean: ['G', 'V', 'S', 'F', 'H', 'f', 'q', 'o', 'Q', 'help', 'version'],
@@ -93,7 +108,7 @@ function sign (opts, pwd) {
 function generate (opts, pwd) {
   var newKeys = minisign.keypairGen(pwd, opts)
   var keys = minisign.formatKeys(newKeys)
-  var publicKey = newKeys.publicKey.toString()
+  var publicKey = newKeys.publicKey.toString('hex')
 
   fs.writeFile(opts.PKfile, keys.PK.toString(), opts.overwrite, (err) => {
     if (err && err.code === 'EEXIST') {
@@ -114,13 +129,27 @@ function generate (opts, pwd) {
 }
 
 // function to accept password from user
-function secureRead (buf, args, cb) {
+function secureRead (opts, cb) {
+  var rl = readline.createInterface({
+    input: process.stdin,
+    output: mutableStdout,
+    terminal: true
+  })
+
+  var pwdBuf
+
   process.stdout.write('password: ')
-  fs.read(0, buf, 0, buf.byteLength, null, (err, bytesRead, buf) => {
-    if (err) throw err
-    buf = buf.subarray(0, bytesRead - 1)
-    sodium.sodium_mprotect_noaccess(buf)
-    cb(args, buf)
+  rl.question('password: ', function (password) {
+    pwdBuf = sodium.sodium_malloc(4096)
+    pwdBuf.fill(Buffer.from(password))
+    pwdBuf = pwdBuf.subarray(0, password.length)
+    sodium.sodium_mprotect_noaccess(pwdBuf)
+    console.log('')
+    rl.close()
+  })
+
+  rl.on('close', function () {
+    cb(opts, pwdBuf)
   })
 }
 
@@ -132,8 +161,6 @@ if (args.version) {
   console.log(pkg.version)
   process.exit()
 }
-
-var passwordBuf = sodium.sodium_malloc(4096)
 
 // initiales fs variables
 var sourceFile
@@ -164,7 +191,7 @@ if (args.G) {
     opts.overwrite = { flag: 'w' }
   }
 
-  secureRead(passwordBuf, opts, generate)
+  secureRead(opts, generate)
 }
 
 // signing a file
@@ -192,7 +219,7 @@ if (args.S) {
     process.exit(1)
   }
 
-  secureRead(passwordBuf, opts, sign)
+  secureRead(opts, sign)
 }
 
 // verifying a signature
