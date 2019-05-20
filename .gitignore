@@ -1,15 +1,3 @@
 node_modules
 .DS_Store
 package-lock.json
-test_sign1.txt
-toBeSigned.txt
-minisignCLITool.js
-test.txt.minisig
-sigParse.js
-test.txt
-example.txt.minisig
-example.txt
-keypairGen.pub
-testing.txt
-emojiString.key
-emojiString.pub

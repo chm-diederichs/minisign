@@ -11,6 +11,17 @@ const minimist = require('minimist')
 var readline = require('readline')
 var Writable = require('stream').Writable
 
+// import arguments from command line
+var args = minimist(process.argv.slice(2), {
+  string: ['m', 'x', 's', 'p', 'P', 'c', 't', 'k'],
+  boolean: ['G', 'V', 'S', 'F', 'H', 'f', 'q', 'o', 'Q', 'help', 'version', 'secure'],
+  alias: { h: 'help', v: 'version', X: 'secure' },
+  unknown: function () {
+    console.log('unrecognised command.')
+    process.exit(1)
+  }
+})
+
 // create muted output stream to read password
 var mutableStdout = new Writable({
   write: function (chunk, encoding, callback) {
@@ -22,17 +33,6 @@ var mutableStdout = new Writable({
 })
 
 mutableStdout.muted = true
-
-// import arguments from command line
-var args = minimist(process.argv.slice(2), {
-  string: ['m', 'x', 's', 'p', 'P', 'c', 't', 'k'],
-  boolean: ['G', 'V', 'S', 'F', 'H', 'f', 'q', 'o', 'Q', 'help', 'version', 'secure'],
-  alias: { h: 'help', v: 'version', X: 'secure' },
-  unknown: function () {
-    console.log('unrecognised command.')
-    process.exit(1)
-  }
-})
 
 const usage = `
   Usage:
@@ -98,7 +98,7 @@ function sign (opts, pwd) {
 
       fs.writeFile(opts.sigFile, stringOutput, (err) => {
         if (err) throw err
-        console.log('signature saved to ', opts.sigFile)
+        console.log('signature saved to', path.relative(cwd, opts.sigFile))
         process.exit()
       })
     })
@@ -140,6 +140,9 @@ function secureRead (buf, opts, cb) {
   })
 }
 
+// accept password without printing to stdout
+// security issue: password is read as string before being passed
+// into a secure buffer and therefore exists in memory
 function hiddenRead (opts, cb) {
   var rl = readline.createInterface({
     input: process.stdin,
@@ -149,14 +152,17 @@ function hiddenRead (opts, cb) {
 
   var pwdBuf
 
-  // security issue: password is read as string before being passed
-  // into a secure buffer and therefore exists in memory
-
   process.stdout.write('password: ')
   rl.question('password: ', function (password) {
     pwdBuf = sodium.sodium_malloc(4096)
-    pwdBuf.fill(Buffer.from(password))
-    pwdBuf = pwdBuf.subarray(0, password.length)
+    try {
+      pwdBuf.fill(Buffer.from(password))
+      pwdBuf = pwdBuf.subarray(0, password.length)
+    } catch (error) {
+      if (error instanceof TypeError) {
+        pwdBuf = pwdBuf.subarray(0, 1)
+      }
+    }
     sodium.sodium_mprotect_noaccess(pwdBuf)
     console.log('')
     rl.close()
@@ -188,6 +194,25 @@ var PKfile = path.resolve(cwd, '/minisign.pub')
 
 var tPrelude = 'trusted comment: '
 
+// configure inputs
+if (args.p) {
+  PKfile = path.resolve(cwd, args.p)
+}
+if (args.s) {
+  SKfile = path.resolve(cwd, args.s)
+}
+if (args.m) {
+  sourceFile = path.normalize(args.m)
+} else if (args.S || args.V) {
+  console.log('please specify file to sign/verify')
+  process.exit(1)
+}
+if (args.x) {
+  sigFile = path.resolve(cwd, args.x)
+} else {
+  sigFile = `${sourceFile}.minisig`
+}
+
 // generate keypair and save to files
 if (args.G) {
   opts = { overwrite: { flag: 'wx' } }
@@ -197,12 +222,6 @@ if (args.G) {
   opts.PKcomment = args.c
   opts.SKcomment = args.t
 
-  if (args.p) {
-    opts.PKfile = path.resolve(cwd, args.p)
-  }
-  if (args.s) {
-    opts.SKfile = path.resolve(cwd, args.s)
-  }
   if (args.F) {
     opts.overwrite = { flag: 'w' }
   }
@@ -211,35 +230,23 @@ if (args.G) {
     passwordBuf = sodium.sodium_malloc(4096)
     secureRead(passwordBuf, opts, generate)
   } else {
-    hiddenRead(opts, sign)
+    hiddenRead(opts, generate)
   }
 }
 
 // signing a file
 if (args.S) {
   opts.sourceFile = path.normalize(args.m)
-  opts.sigFile = `${sourceFile}.minisig`
+  opts.sigFile = sigFile
   opts.SKfile = SKfile
   opts.PKfile = PKfile
 
   opts.comment = args.c
   opts.tComment = args.t
 
-  if (args.s) {
-    opts.SKfile = path.resolve(cwd, args.s)
-  }
-  if (args.x) {
-    opts.sigFile = path.resolve(cwd, args.x)
-  }
   if (args.H) {
     opts.sigAlgorithm = 'ED'
   }
-
-  if (!args.m) {
-    console.log('specify file to be verified')
-    process.exit(1)
-  }
-
   if (args.secure) {
     passwordBuf = sodium.sodium_malloc(4096)
     secureRead(passwordBuf, opts, sign)
@@ -250,10 +257,6 @@ if (args.S) {
 
 // verifying a signature
 if (args.V) {
-  if (!args.m) {
-    console.log('specify file to be verified')
-    process.exit(1)
-  }
   if (args.o && (args.q || args.Q)) {
     console.log('cannot output content in quiet mode')
     process.exit(1)
@@ -261,19 +264,6 @@ if (args.V) {
   if ((args.P && args.p) || (!args.P && !args.p)) {
     console.log('must provide unique key')
     process.exit(1)
-  }
-
-  sourceFile = path.normalize(args.m)
-  sigFile = `${sourceFile}.minisig`
-
-  if (args.p) {
-    PKfile = path.resolve(cwd, args.p)
-  }
-  if (args.s) {
-    SKfile = path.resolve(cwd, args.s)
-  }
-  if (args.x) {
-    sigFile = path.resolve(cwd, args.x)
   }
 
   fs.readFile(sigFile, (err, signature) => {
