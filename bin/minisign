@@ -15,7 +15,7 @@ var Writable = require('stream').Writable
 var args = minimist(process.argv.slice(2), {
   string: ['m', 'x', 's', 'p', 'P', 'c', 't', 'k'],
   boolean: ['G', 'V', 'S', 'F', 'H', 'f', 'q', 'o', 'Q', 'help', 'version', 'secure'],
-  alias: { h: 'help', v: 'version', X: 'secure' },
+  alias: { h: 'help', v: 'version', x: 'secure' },
   unknown: function () {
     console.log('unrecognised command.')
     process.exit(1)
