@@ -159,7 +159,7 @@ function signContent (content, SKdetails, opts) {
   if (opts == null) opts = {}
   var comment = opts.comment || defaultComment
   var tComment = opts.tComment || (Math.floor(Date.now() / 1000)).toString('10')
-  var sigAlgorithm = Buffer.from(opts.sigAlgorithm || 'Ed')
+  var sigAlgorithm = Buffer.from(opts.sigAlgorithm || 'ED')
   var contentToSign
   var signatureAlgorithm
   var trustComment

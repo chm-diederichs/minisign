@@ -65,7 +65,6 @@ If no signature file is specified, the signature file must be in the same direct
  -V                verify that a signature is valid for a given file
  -m <file>         file to sign/verify
  -o                combined with -V, output the file content after verification
- -H                combined with -S, pre-hash in order to sign large files
  -p <pubkeyfile>   public key file (default: ./minisign.pub)
  -P <pubkey>       public key, as a base64 string
  -s <seckey>       secret key file (default: ~/.minisign/minisign.key)
