@@ -129,7 +129,7 @@ test('signContent generated input', (t) => {
     var sigInfo = minisign.parseSignature(signedOutput)
 
     t.equal(sigInfo.signature.length, sodium.crypto_sign_BYTES)
-    t.deepEqual(sigInfo.signatureAlgorithm, Buffer.from('Ed'))
+    t.deepEqual(sigInfo.signatureAlgorithm, Buffer.from('ED'))
     t.equal(sigInfo.keyID.byteLength, 8)
     t.equal(sigInfo.globalSignature.length, sodium.crypto_sign_BYTES)
     t.end()

@@ -3,7 +3,7 @@ var minisign = require('../minisign.js')
 var sodium = require('sodium-native')
 var fs = require('fs')
 
-test('sign empty content with minisign key, no tComment given', (t) => {
+test('sign empty content with minisign key, no comment given', (t) => {
   var comment = 'untrusted comment: signature from minisign secret key'
   var noContent = Buffer.alloc(0)
 
@@ -145,7 +145,9 @@ test('sign with large, emoji comment / tComment', (t) => {
         t.error(err)
         var PKinfo = minisign.parsePubKey(PK)
         t.ok(minisign.verifySignature(parsedOutput1, contentToSign, PKinfo))
-        t.ok(sodium.crypto_sign_verify_detached(parsedOutput2.signature, contentToSign, PKinfo.publicKey))
+        var hashedContent = Buffer.alloc(sodium.crypto_generichash_BYTES_MAX)
+        sodium.crypto_generichash(hashedContent, contentToSign)
+        t.ok(sodium.crypto_sign_verify_detached(parsedOutput2.signature, hashedContent, PKinfo.publicKey))
         t.ok(minisign.verifySignature(parsedOutput2, contentToSign, PKinfo))
         t.end()
       })
